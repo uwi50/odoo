@@ -3630,6 +3630,17 @@ msgstr "Не вдається створити невикористаний ко
 #: code:addons/account/models/account_journal.py:0
 #, python-format
 msgid ""
+"Cannot generate an unused journal code. Please change the name for journal "
+"%s."
+msgstr ""
+"Не вдається створити невикористаний код журналу. Будь ласка, змініть назву "
+"журналу %s."
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_journal.py:0
+#, python-format
+msgid ""
 "Cannot generate an unused journal code. Please fill the 'Shortcode' field."
 msgstr ""
 "Неможливо створити невикористаний код журналу. Будь ласка, заповніть поле "

@@ -27,6 +27,7 @@
 # Vladimir Vrgoč, 2023
 # Martin Trigaux, 2023
 # Goran Kliska <gkliska@gmail.com>, 2023
+# Antonijo Kovacevic, 2023
 # Matija Gudlin, 2023
 # 
 msgid ""
@@ -240,7 +241,7 @@ msgstr "%s.copija"
 #: code:addons/account/models/account_move_line.py:0
 #, python-format
 msgid "(Discount)"
-msgstr ""
+msgstr "(Popust)"
 
 #. module: account
 #. odoo-python
@@ -3452,6 +3453,15 @@ msgstr "Nije moguće kreirati nekorištenu šifru konta."
 #: code:addons/account/models/account_journal.py:0
 #, python-format
 msgid ""
+"Cannot generate an unused journal code. Please change the name for journal "
+"%s."
+msgstr ""
+
+#. module: account
+#. odoo-python
+#: code:addons/account/models/account_journal.py:0
+#, python-format
+msgid ""
 "Cannot generate an unused journal code. Please fill the 'Shortcode' field."
 msgstr ""
 "Nije moguće generirati ne korištenu šifru dnevnika. Ispunite polje 'kratka "
@@ -5591,7 +5601,7 @@ msgstr "Distribucija za storna računa"
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_tax_form
 msgid "Distribution for Refunds"
-msgstr ""
+msgstr "Distribucija za storna računa"
 
 #. module: account
 #: model:ir.model.fields,help:account.field_account_tax__refund_repartition_line_ids
@@ -7134,6 +7144,8 @@ msgid ""
 "If ticked, the accounting entry or invoice receives a hash as soon as it is "
 "posted and cannot be modified anymore."
 msgstr ""
+"Ako je označeno, računovodstveni unos ili faktura dobivaju hash čim se "
+"knjiže i više se ne mogu mijenjati."
 
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.res_config_settings_view_form

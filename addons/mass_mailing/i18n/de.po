@@ -1884,7 +1884,7 @@ msgstr "Entwurf"
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.view_mail_mass_mailing_kanban
 msgid "Dropdown menu"
-msgstr "Dropdownmenu"
+msgstr "Drop-down-Menü"
 
 #. module: mass_mailing
 #: model_terms:ir.ui.view,arch_db:mass_mailing.s_features_grid
@@ -2304,7 +2304,7 @@ msgid ""
 "related mail_mail can be deleted separately from its statistics. However the"
 " ID is needed for several action and controllers."
 msgstr ""
-"ID der zugehörigen mail_mail. Dieses Feld ist eine Ganzzahl, weil das "
+"ID der zugehörigen mail_mail. Dieses Feld ist eine Ganzzahl, weil die "
 "zugehörige mail_mail separat von dessen Statistiken gelöscht werden kann. "
 "Diese ID wird allerdings für verschiedene Aktionen und Controller benötigt."
 

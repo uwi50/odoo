@@ -5,9 +5,9 @@
 # Translators:
 # Friederike Fasterling-Nesselbosch, 2022
 # Martin Trigaux, 2022
-# Francesco Foresti <francesco.foresti@ooops404.com>, 2022
-# Sergio Zanchetta <primes2h@gmail.com>, 2023
+# francesco.foresti <francesco.foresti@ooops404.com>, 2022
 # Sebastiano Picchi, 2023
+# Sergio Zanchetta <primes2h@gmail.com>, 2023
 # Marianna Ciofani, 2023
 # 
 msgid ""
@@ -4626,7 +4626,7 @@ msgstr "Allegato principale"
 #: code:addons/stock/models/stock_warehouse.py:0
 #, python-format
 msgid "Make To Order"
-msgstr "Su ordine (MTO)"
+msgstr "Produzione su ordine (MTO)"
 
 #. module: stock
 #: model:res.groups,name:stock.group_tracking_owner
@@ -7481,7 +7481,7 @@ msgstr "Sequenza reso"
 #: code:addons/stock/models/stock_picking.py:0
 #, python-format
 msgid "Sequences %s already exist."
-msgstr ""
+msgstr "Le sequenze %s esistono già."
 
 #. module: stock
 #: model:ir.model.fields,field_description:stock.field_stock_move__lot_ids
@@ -10090,6 +10090,8 @@ msgstr ""
 #, python-format
 msgid "You cannot split a stock move that has been set to 'Done' or 'Cancel'."
 msgstr ""
+"Non è possibile suddividere un movimento di magazzino impostato a "
+"\"Completato\" o \"Annullato\"."
 
 #. module: stock
 #. odoo-python

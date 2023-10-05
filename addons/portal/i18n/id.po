@@ -94,7 +94,7 @@ msgstr "<i title=\"Dokumentasi\" class=\"fa fa-fw o_button_icon fa-info-circle\"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_details_fields
 msgid "<option value=\"\">Country...</option>"
-msgstr ""
+msgstr "<option value=\"\">Negara...</option>"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_details_fields
@@ -283,7 +283,7 @@ msgstr ""
 #: code:addons/portal/controllers/mail.py:0
 #, python-format
 msgid "An access token must be provided for each attachment."
-msgstr ""
+msgstr "Token akses harus disediakan untuk setiap lampiran."
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security
@@ -576,7 +576,7 @@ msgstr "Masukkan keterangan dari dan tujuan kunci."
 #: code:addons/portal/static/src/xml/portal_security.xml:0
 #, python-format
 msgid "Forgot password?"
-msgstr ""
+msgstr "Lupa password?"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.wizard_view
@@ -637,7 +637,7 @@ msgstr "Catatan Internal"
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.wizard_view
 msgid "Internal User"
-msgstr ""
+msgstr "User Internal"
 
 #. module: portal
 #. odoo-javascript
@@ -773,7 +773,7 @@ msgstr "Nama"
 #: code:addons/portal/static/src/xml/portal_security.xml:0
 #, python-format
 msgid "Name your key"
-msgstr ""
+msgstr "Nama kunci Anda"
 
 #. module: portal
 #. odoo-javascript
@@ -781,7 +781,7 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security
 #, python-format
 msgid "New API Key"
-msgstr ""
+msgstr "Kunci API Baru"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security
@@ -978,7 +978,7 @@ msgstr "Keamanan"
 #: code:addons/portal/static/src/js/portal.js:0
 #, python-format
 msgid "Security Control"
-msgstr ""
+msgstr "Kontrol Keamanan"
 
 #. module: portal
 #: model:ir.model.fields,field_description:portal.field_portal_mixin__access_token
@@ -1318,7 +1318,7 @@ msgstr "Sejarah komunikasi situs"
 #: code:addons/portal/static/src/xml/portal_security.xml:0
 #, python-format
 msgid "What's this key for?"
-msgstr ""
+msgstr "Kunci ini untuk apa?"
 
 #. module: portal
 #: model:ir.model.fields,field_description:portal.field_portal_wizard_user__wizard_id
@@ -1337,7 +1337,7 @@ msgstr "Tulis pesan..."
 #: code:addons/portal/static/src/xml/portal_security.xml:0
 #, python-format
 msgid "Write down your key"
-msgstr ""
+msgstr "Tulis kunci Anda"
 
 #. module: portal
 #: model_terms:ir.ui.view,arch_db:portal.portal_my_security

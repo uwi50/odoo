@@ -41,7 +41,28 @@ class DataPoint {
         } else if (params.handle) {
             this.__bm_handle__ = params.handle;
             info = this.model.__bm__.get(this.__bm_handle__);
-            this.context = this.model.__bm__.localData[this.__bm_handle__].getContext();
+            // Create a lazy property that sets itself on first read, because creating the context
+            // is very expensive, and in some cases we are creating a lot of DataPoints whose
+            // context will never be read.
+            Object.defineProperty(this, "context", {
+                get() {
+                    const context = this.model.__bm__.localData[this.__bm_handle__].getContext();
+                    Object.defineProperty(this, "context", {
+                        value: context,
+                        configurable: true,
+                        writable: true,
+                    });
+                    return context;
+                },
+                set(value) {
+                    Object.defineProperty(this, "context", {
+                        value,
+                        configurable: true,
+                        writable: true,
+                    });
+                },
+                configurable: true,
+            });
         } else {
             throw new Error("Datapoint needs load params or handle");
         }
@@ -584,7 +605,11 @@ export class Record extends DataPoint {
             const prom = this.model.__bm__.notifyChanges(this.__bm_handle__, data, {
                 viewType: this.__viewType,
             });
-            prom.catch(resolveUpdatePromise); // onchange rpc may return an error
+            prom.catch(() => {
+                this.model.notify();
+                // onchange rpc may return an error
+                resolveUpdatePromise();
+            });
             const fieldNames = await prom;
             this._removeInvalidFields(fieldNames);
             for (const fieldName of fieldNames) {

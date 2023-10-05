@@ -1047,6 +1047,41 @@ class TestBoM(TestMrpCommon):
         # Total quantity of components is 4, so shouldn't be able to produce a single one.
         self.assertEqual(report_values['lines']['producible_qty'], 0)
 
+    def test_bom_report_same_component(self):
+        """ Test report bom structure with duplicated components.
+        """
+        location = self.env.ref('stock.stock_location_stock')
+        uom_unit = self.env.ref('uom.product_uom_unit')
+        final_product_tmpl = self.env['product.template'].create({'name': 'Final Product', 'type': 'product'})
+        component_product = self.env['product.product'].create({'name': 'Compo 1', 'type': 'product'})
+
+        self.env['stock.quant']._update_available_quantity(component_product, location, 3.0)
+
+        bom = self.env['mrp.bom'].create({
+            'product_tmpl_id': final_product_tmpl.id,
+            'product_uom_id': self.uom_unit.id,
+            'product_qty': 1.0,
+            'type': 'normal',
+            'bom_line_ids': [
+                Command.create({
+                    'product_id': component_product.id,
+                    'product_qty': 3,
+                    'product_uom_id': uom_unit.id,
+                }),
+                Command.create({
+                    'product_id': component_product.id,
+                    'product_qty': 3,
+                    'product_uom_id': uom_unit.id,
+                })
+            ]
+        })
+
+        report_values = self.env['report.mrp.report_bom_structure']._get_report_data(bom_id=bom.id)
+        line1_values = report_values['lines']['components'][0]
+        line2_values = report_values['lines']['components'][1]
+        self.assertEqual(line1_values['availability_state'], 'available', 'The first component should be available.')
+        self.assertEqual(line2_values['availability_state'], 'unavailable', 'The second component should be marked as unavailable')
+
     def test_validate_no_bom_line_with_same_product(self):
         """
         Cannot set a BOM line on a BOM with the same product as the BOM itself
@@ -1402,3 +1437,56 @@ class TestBoM(TestMrpCommon):
                 (0, 0, {'product_id': self.product_7_1.id, 'product_qty': 1.0}),
             ],
         })
+
+    def test_component_when_bom_change(self):
+        """
+        Checks that the component of the previous BoM is removed when another BoM is set on the MO:
+            - Create a product with 2 BoMs:
+                BoM 1: compoennt 1
+                BoM 2: component 2
+            - Create a MO for the product with BoM 1
+            - check that the component 1 is set
+            - change the BoM on the MO to BoM 2
+            - come back to BoM 1
+            - check that the component 2 is removed and replaced by the component 1
+        """
+        # Create BoM 1 with component 1
+        bom_1 = self.env['mrp.bom'].create({
+            'product_tmpl_id': self.product_7_template.id,
+            'product_uom_id': self.product_7_template.uom_id.id,
+            'product_qty': 1.0,
+            'type': 'normal',
+            'bom_line_ids': [Command.create({
+                'product_id': self.product_1.id,
+                'product_qty': 1.0,
+            })],
+        })
+        # Create BoM 2 with component 2
+        bom_2 = self.env['mrp.bom'].create({
+            'product_tmpl_id': self.product_7_template.id,
+            'product_uom_id': self.product_7_template.uom_id.id,
+            'product_qty': 1.0,
+            'type': 'normal',
+            'bom_line_ids': [Command.create({
+                'product_id': self.product_2.id,
+                'product_qty': 1.0,
+            })],
+        })
+        # Create a MO with BoM 1
+        mo = self.env['mrp.production'].create({
+            'product_qty': 1.0,
+            'bom_id': bom_1.id,
+        })
+        # Check that component 1 is set
+        self.assertEqual(mo.move_raw_ids.product_id, self.product_1)
+        # Change BoM in the MO to BoM 2
+        mo_form = Form(mo)
+        mo_form.bom_id = bom_2
+        # Check that component 2 is set
+        self.assertEqual(mo_form.move_raw_ids._records[0]['product_id'], self.product_2.id)
+        self.assertEqual(len(mo_form.move_raw_ids._records), 1)
+        # Revert back to BoM 1
+        mo_form.bom_id = bom_1
+        # Check that component 1 is set again and component 2 is removed
+        self.assertEqual(mo_form.move_raw_ids._records[0]['product_id'], self.product_1.id)
+        self.assertEqual(len(mo_form.move_raw_ids._records), 1)

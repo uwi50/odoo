@@ -1007,13 +1007,17 @@
         return position === "after" ? base + 1 : base;
     }
     /**
-     * Compare two objects.
+     * Compares two objects.
      */
     function deepEquals(o1, o2) {
         if (o1 === o2)
             return true;
         if ((o1 && !o2) || (o2 && !o1))
             return false;
+        if (typeof o1 !== typeof o2)
+            return false;
+        if (typeof o1 !== "object")
+            return o1 === o2;
         // Objects can have different keys if the values are undefined
         const keys = new Set();
         Object.keys(o1).forEach((key) => keys.add(key));
@@ -3516,6 +3520,7 @@
     background-color: white;
     border-left: 3px solid red;
     padding: 10px;
+    overflow-wrap: break-word;
   }
 `;
     class ErrorToolTip extends owl.Component {
@@ -3684,6 +3689,9 @@
                 }
             });
             this.state.values = this.getFilterValues(this.props.filterPosition);
+        }
+        get isReadonly() {
+            return this.env.model.getters.isReadonly();
         }
         getFilterValues(position) {
             const sheetId = this.env.model.getters.getActiveSheetId();
@@ -5032,6 +5040,13 @@
             elements: rows,
         });
     };
+    const CAN_REMOVE_COLUMNS_ROWS = (dimension, env) => {
+        const sheetId = env.model.getters.getActiveSheetId();
+        const selectedElements = env.model.getters.getElementsFromSelection(dimension);
+        const includesAllVisibleHeaders = env.model.getters.checkElementsIncludeAllVisibleHeaders(sheetId, dimension, selectedElements);
+        const includesAllNonFrozenHeaders = env.model.getters.checkElementsIncludeAllNonFrozenHeaders(sheetId, dimension, selectedElements);
+        return !includesAllVisibleHeaders && !includesAllNonFrozenHeaders;
+    };
     const REMOVE_COLUMNS_NAME = (env) => {
         if (env.model.getters.getSelectedZones().length > 1) {
             return _lt("Delete columns");
@@ -5636,11 +5651,7 @@
         name: REMOVE_COLUMNS_NAME,
         sequence: 90,
         action: REMOVE_COLUMNS_ACTION,
-        isVisible: (env) => {
-            const sheetId = env.model.getters.getActiveSheetId();
-            const selectedCols = env.model.getters.getElementsFromSelection("COL");
-            return env.model.getters.canRemoveHeaders(sheetId, "COL", selectedCols);
-        },
+        isVisible: (env) => CAN_REMOVE_COLUMNS_ROWS("COL", env),
     })
         .add("clear_column", {
         name: DELETE_CONTENT_COLUMNS_NAME,
@@ -5654,7 +5665,7 @@
         isVisible: (env) => {
             const sheetId = env.model.getters.getActiveSheetId();
             const selectedCols = env.model.getters.getElementsFromSelection("COL");
-            return env.model.getters.canRemoveHeaders(sheetId, "COL", selectedCols);
+            return !env.model.getters.checkElementsIncludeAllVisibleHeaders(sheetId, "COL", selectedCols);
         },
         separator: true,
     })
@@ -5728,11 +5739,7 @@
         name: REMOVE_ROWS_NAME,
         sequence: 70,
         action: REMOVE_ROWS_ACTION,
-        isVisible: (env) => {
-            const sheetId = env.model.getters.getActiveSheetId();
-            const selectedRows = env.model.getters.getElementsFromSelection("ROW");
-            return env.model.getters.canRemoveHeaders(sheetId, "ROW", selectedRows);
-        },
+        isVisible: (env) => CAN_REMOVE_COLUMNS_ROWS("ROW", env),
     })
         .add("clear_row", {
         name: DELETE_CONTENT_ROWS_NAME,
@@ -5746,7 +5753,7 @@
         isVisible: (env) => {
             const sheetId = env.model.getters.getActiveSheetId();
             const selectedRows = env.model.getters.getElementsFromSelection("ROW");
-            return env.model.getters.canRemoveHeaders(sheetId, "ROW", selectedRows);
+            return !env.model.getters.checkElementsIncludeAllVisibleHeaders(sheetId, "ROW", selectedRows);
         },
         separator: true,
     })
@@ -6040,11 +6047,13 @@
         name: REMOVE_ROWS_NAME,
         sequence: 80,
         action: REMOVE_ROWS_ACTION,
+        isVisible: (env) => CAN_REMOVE_COLUMNS_ROWS("ROW", env),
     })
         .addChild("edit_delete_column", ["edit"], {
         name: REMOVE_COLUMNS_NAME,
         sequence: 90,
         action: REMOVE_COLUMNS_ACTION,
+        isVisible: (env) => CAN_REMOVE_COLUMNS_ROWS("COL", env),
     })
         .addChild("edit_delete_cell_shift_up", ["edit"], {
         name: _lt("Delete cell and shift up"),
@@ -7811,6 +7820,7 @@
             this.legendPosition = definition.legendPosition;
             this.labelsAsText = definition.labelsAsText;
             this.stacked = definition.stacked;
+            this.cumulative = definition.cumulative;
         }
         static validateChartDefinition(validator, definition) {
             return validator.checkValidations(definition, checkDataset, checkLabelRange);
@@ -7830,6 +7840,7 @@
                 verticalAxisPosition: "left",
                 labelRange: context.auxiliaryRange || undefined,
                 stacked: false,
+                cumulative: false,
             };
         }
         getDefinition() {
@@ -7849,6 +7860,7 @@
                 title: this.title,
                 labelsAsText: this.labelsAsText,
                 stacked: this.stacked,
+                cumulative: this.cumulative,
             };
         }
         getContextCreation() {
@@ -8032,6 +8044,16 @@
             let backgroundRGBA = colorToRGBA(color);
             if (chart.stacked) {
                 backgroundRGBA.a = LINE_FILL_TRANSPARENCY;
+            }
+            if (chart.cumulative) {
+                let accumulator = 0;
+                data = data.map((value) => {
+                    if (!isNaN(value)) {
+                        accumulator += parseFloat(value);
+                        return accumulator;
+                    }
+                    return value;
+                });
             }
             const backgroundColor = rgbaToHex(backgroundRGBA);
             const dataset = {
@@ -8816,6 +8838,11 @@
         onUpdateStacked(ev) {
             this.props.updateChart(this.props.figureId, {
                 stacked: ev.target.checked,
+            });
+        }
+        onUpdateCumulative(ev) {
+            this.props.updateChart(this.props.figureId, {
+                cumulative: ev.target.checked,
             });
         }
     }
@@ -9984,9 +10011,9 @@
         }
         setup() {
             this.showFormulaState = this.env.model.getters.shouldShowFormulas();
-            this.debouncedUpdateSearch = debounce(this.updateSearch.bind(this), 200);
             owl.onMounted(() => this.focusInput());
             owl.onWillUnmount(() => {
+                clearTimeout(this.debounceTimeoutId);
                 this.env.model.dispatch("CLEAR_SEARCH");
                 this.env.model.dispatch("SET_FORMULA_VISIBILITY", { show: this.showFormulaState });
             });
@@ -10028,6 +10055,13 @@
                 toSearch: this.state.toSearch,
                 searchOptions: this.state.searchOptions,
             });
+        }
+        debouncedUpdateSearch() {
+            clearTimeout(this.debounceTimeoutId);
+            this.debounceTimeoutId = setTimeout(() => {
+                this.updateSearch();
+                this.debounceTimeoutId = undefined;
+            }, 200);
         }
         replace() {
             this.env.model.dispatch("REPLACE_SEARCH", {
@@ -21277,9 +21311,11 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             }
         }
         function updateMousePosition(e) {
-            x = e.offsetX;
-            y = e.offsetY;
-            lastMoved = Date.now();
+            if (gridRef.el === e.target) {
+                x = e.offsetX;
+                y = e.offsetY;
+                lastMoved = Date.now();
+            }
         }
         function recompute() {
             const { col, row } = getPosition();
@@ -24647,6 +24683,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             verticalAxisPosition: chartData.verticalAxisPosition,
             legendPosition: chartData.legendPosition,
             stacked: chartData.stacked || false,
+            cumulative: chartData.cumulative || false,
             labelsAsText: false,
         };
     }
@@ -28922,7 +28959,11 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     let sizes = [...this.sizes[cmd.sheetId][cmd.dimension]];
                     const addIndex = getAddHeaderStartIndex(cmd.position, cmd.base);
                     const baseSize = sizes[cmd.base];
-                    sizes.splice(addIndex, 0, ...Array(cmd.quantity).fill(baseSize));
+                    const sizesToInsert = range(0, cmd.quantity).map(() => ({
+                        manualSize: baseSize.manualSize,
+                        computedSize: lazy(baseSize.computedSize()),
+                    }));
+                    sizes.splice(addIndex, 0, ...sizesToInsert);
                     sizes = sizes.map((size, row) => {
                         if (cmd.dimension === "ROW" && row > cmd.base + cmd.quantity) {
                             // invalidate sizes
@@ -29139,7 +29180,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     if (!this.getters.tryGetSheet(cmd.sheetId)) {
                         return 27 /* CommandResult.InvalidSheetId */;
                     }
-                    if (!this.canRemoveHeaders(cmd.sheetId, cmd.dimension, cmd.elements)) {
+                    if (this.checkElementsIncludeAllVisibleHeaders(cmd.sheetId, cmd.dimension, cmd.elements)) {
                         return 8 /* CommandResult.NotEnoughElements */;
                     }
                     return 0 /* CommandResult.Success */;
@@ -29189,9 +29230,9 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             }
             return;
         }
-        canRemoveHeaders(sheetId, dimension, elements) {
+        checkElementsIncludeAllVisibleHeaders(sheetId, dimension, elements) {
             const visibleHeaders = this.getAllVisibleHeaders(sheetId, dimension);
-            return !includesAll(elements, visibleHeaders);
+            return includesAll(elements, visibleHeaders);
         }
         isRowHiddenByUser(sheetId, index) {
             return this.hiddenHeaders[sheetId].ROW[index];
@@ -29287,7 +29328,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         }
     }
     HeaderVisibilityPlugin.getters = [
-        "canRemoveHeaders",
+        "checkElementsIncludeAllVisibleHeaders",
         "getHiddenColsGroups",
         "getHiddenRowsGroups",
         "isRowHiddenByUser",
@@ -29806,6 +29847,9 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                     if (Math.min(...cmd.elements) < 0 || Math.max(...cmd.elements) > elements) {
                         return 85 /* CommandResult.InvalidHeaderIndex */;
                     }
+                    else if (this.checkElementsIncludeAllNonFrozenHeaders(cmd.sheetId, cmd.dimension, cmd.elements)) {
+                        return 8 /* CommandResult.NotEnoughElements */;
+                    }
                     else {
                         return 0 /* CommandResult.Success */;
                     }
@@ -30104,6 +30148,20 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                 panes.ySplit = base;
             }
             this.history.update("sheets", sheetId, "panes", panes);
+        }
+        /**
+         * Checks if all non-frozen header indices are present in the provided elements of selected rows/columns.
+         * This validation ensures that all rows or columns cannot be deleted when frozen panes exist.
+         */
+        checkElementsIncludeAllNonFrozenHeaders(sheetId, dimension, elements) {
+            const paneDivisions = this.getters.getPaneDivisions(sheetId);
+            const startIndex = dimension === "ROW" ? paneDivisions.ySplit : paneDivisions.xSplit;
+            const endIndex = this.getters.getNumberHeaders(sheetId, dimension);
+            if (!startIndex) {
+                return false;
+            }
+            const indicesToCheck = range(startIndex, endIndex);
+            return includesAll(elements, indicesToCheck);
         }
         // ---------------------------------------------------------------------------
         // Row/Col manipulation
@@ -30639,6 +30697,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         "getSheetSize",
         "getSheetZone",
         "getPaneDivisions",
+        "checkElementsIncludeAllNonFrozenHeaders",
     ];
 
     /**
@@ -31605,7 +31664,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             });
             for (const filterTable of this.copiedTables) {
                 this.dispatch("REMOVE_FILTER_TABLE", {
-                    sheetId: this.getters.getActiveSheetId(),
+                    sheetId: this.sheetId,
                     target: [filterTable.zone],
                 });
             }
@@ -32020,7 +32079,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         allowDispatch(cmd) {
             switch (cmd.type) {
                 case "CUT":
-                    const zones = cmd.target || this.getters.getSelectedZones();
+                    const zones = this.getters.getSelectedZones();
                     const state = this.getClipboardState(zones, cmd.type);
                     return state.isCutAllowed(zones);
                 case "PASTE":
@@ -32051,7 +32110,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             switch (cmd.type) {
                 case "COPY":
                 case "CUT":
-                    const zones = ("target" in cmd && cmd.target) || this.getters.getSelectedZones();
+                    const zones = this.getters.getSelectedZones();
                     this.state = this.getClipboardState(zones, cmd.type);
                     this.status = "visible";
                     break;
@@ -32669,6 +32728,7 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             // stores the computed styles in the format of computedStyles.sheetName[col][row] = Style
             this.computedStyles = {};
             this.computedIcons = {};
+            this.uuidGenerator = new UuidGenerator();
             /**
              * Execute the predicate to know if a conditional formatting rule should be applied to a cell
              */
@@ -33020,8 +33080,9 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
                             this.adaptRules(origin.sheetId, cf, [xc], toRemoveRange);
                         }
                         else {
-                            this.adaptRules(target.sheetId, cf, [xc], []);
                             this.adaptRules(origin.sheetId, cf, [], toRemoveRange);
+                            const cfToCopyTo = this.getCFToCopyTo(target.sheetId, cf);
+                            this.adaptRules(target.sheetId, cfToCopyTo, [xc], []);
                         }
                     }
                 }
@@ -33029,6 +33090,12 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
         }
         isCellValueNumber(value) {
             return typeof value === "number";
+        }
+        getCFToCopyTo(targetSheetId, originCF) {
+            const cfInTarget = this.getters
+                .getConditionalFormats(targetSheetId)
+                .find((cf) => cf.stopIfTrue === originCF.stopIfTrue && deepEquals(cf.rule, originCF.rule));
+            return cfInTarget ? cfInTarget : { ...originCF, id: this.uuidGenerator.uuidv4(), ranges: [] };
         }
     }
     EvaluationConditionalFormatPlugin.getters = ["getConditionalIcon", "getCellComputedStyle"];
@@ -34797,26 +34864,24 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             const isBasedBefore = cmd.base < start;
             const deltaCol = isBasedBefore && isCol ? thickness : 0;
             const deltaRow = isBasedBefore && !isCol ? thickness : 0;
-            this.dispatch("CUT", {
-                target: [
-                    {
-                        left: isCol ? start + deltaCol : 0,
-                        right: isCol ? end + deltaCol : this.getters.getNumberCols(cmd.sheetId) - 1,
-                        top: !isCol ? start + deltaRow : 0,
-                        bottom: !isCol ? end + deltaRow : this.getters.getNumberRows(cmd.sheetId) - 1,
-                    },
-                ],
-            });
-            this.dispatch("PASTE", {
-                target: [
-                    {
-                        left: isCol ? cmd.base : 0,
-                        right: isCol ? cmd.base + thickness - 1 : this.getters.getNumberCols(cmd.sheetId) - 1,
-                        top: !isCol ? cmd.base : 0,
-                        bottom: !isCol ? cmd.base + thickness - 1 : this.getters.getNumberRows(cmd.sheetId) - 1,
-                    },
-                ],
-            });
+            const target = [
+                {
+                    left: isCol ? start + deltaCol : 0,
+                    right: isCol ? end + deltaCol : this.getters.getNumberCols(cmd.sheetId) - 1,
+                    top: !isCol ? start + deltaRow : 0,
+                    bottom: !isCol ? end + deltaRow : this.getters.getNumberRows(cmd.sheetId) - 1,
+                },
+            ];
+            const state = new ClipboardCellsState(target, "CUT", this.getters, this.dispatch, this.selection);
+            const pasteTarget = [
+                {
+                    left: isCol ? cmd.base : 0,
+                    right: isCol ? cmd.base + thickness - 1 : this.getters.getNumberCols(cmd.sheetId) - 1,
+                    top: !isCol ? cmd.base : 0,
+                    bottom: !isCol ? cmd.base + thickness - 1 : this.getters.getNumberRows(cmd.sheetId) - 1,
+                },
+            ];
+            state.paste(pasteTarget, { selectTarget: true });
             const toRemove = isBasedBefore ? cmd.elements.map((el) => el + thickness) : cmd.elements;
             let currentIndex = cmd.base;
             for (const element of toRemove) {
@@ -36258,30 +36323,26 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             const { end } = this.getters.getColDimensions(sheetId, targetCol);
             const maxCol = this.getters.getNumberCols(sheetId);
             if (this.offsetX + this.offsetCorrectionX + this.viewportWidth < end) {
-                for (let col = this.left; this.offsetX + this.offsetCorrectionX + this.viewportWidth < end; col++) {
-                    if (col > maxCol) {
-                        break;
-                    }
-                    if (this.getters.isColHidden(sheetId, col)) {
-                        continue;
-                    }
-                    this.offsetX = this.getters.getColDimensions(sheetId, col).end - this.offsetCorrectionX;
-                    this.offsetScrollbarX = this.offsetX;
-                    this.adjustViewportZoneX();
+                let finalTarget = targetCol;
+                while (this.getters.isColHidden(sheetId, finalTarget) && targetCol < maxCol) {
+                    finalTarget++;
                 }
+                const finalTargetEnd = this.getters.getColDimensions(sheetId, finalTarget).end;
+                const startIndex = this.searchHeaderIndex("COL", finalTargetEnd - this.viewportWidth - this.offsetCorrectionX, this.boundaries.left, true);
+                this.offsetX =
+                    this.getters.getColDimensions(sheetId, startIndex).end - this.offsetCorrectionX;
+                this.offsetScrollbarX = this.offsetX;
+                this.adjustViewportZoneX();
             }
             else if (this.left > targetCol) {
-                for (let col = this.left; col >= targetCol; col--) {
-                    if (col < 0) {
-                        break;
-                    }
-                    if (this.getters.isColHidden(sheetId, col)) {
-                        continue;
-                    }
-                    this.offsetX = this.getters.getColDimensions(sheetId, col).start - this.offsetCorrectionX;
-                    this.offsetScrollbarX = this.offsetX;
-                    this.adjustViewportZoneX();
+                let finalTarget = targetCol;
+                while (this.getters.isColHidden(sheetId, finalTarget) && targetCol > 0) {
+                    finalTarget--;
                 }
+                this.offsetX =
+                    this.getters.getColDimensions(sheetId, finalTarget).start - this.offsetCorrectionX;
+                this.offsetScrollbarX = this.offsetX;
+                this.adjustViewportZoneX();
             }
         }
         adjustPositionY(targetRow) {
@@ -36289,30 +36350,26 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             const { end } = this.getters.getRowDimensions(sheetId, targetRow);
             const maxRow = this.getters.getNumberRows(sheetId);
             if (this.offsetY + this.viewportHeight + this.offsetCorrectionY < end) {
-                for (let row = this.top; this.offsetY + this.viewportHeight + this.offsetCorrectionY < end; row++) {
-                    if (row > maxRow) {
-                        break;
-                    }
-                    if (this.getters.isRowHidden(sheetId, row)) {
-                        continue;
-                    }
-                    this.offsetY = this.getters.getRowDimensions(sheetId, row).end - this.offsetCorrectionY;
-                    this.offsetScrollbarY = this.offsetY;
-                    this.adjustViewportZoneY();
+                let finalTarget = targetRow;
+                while (this.getters.isRowHidden(sheetId, finalTarget) && targetRow < maxRow) {
+                    finalTarget++;
                 }
+                const finalTargetEnd = this.getters.getRowDimensions(sheetId, finalTarget).end;
+                const startIndex = this.searchHeaderIndex("ROW", finalTargetEnd - this.viewportHeight - this.offsetCorrectionY, this.boundaries.top, true);
+                this.offsetY =
+                    this.getters.getRowDimensions(sheetId, startIndex).end - this.offsetCorrectionY;
+                this.offsetScrollbarY = this.offsetY;
+                this.adjustViewportZoneY();
             }
             else if (this.top > targetRow) {
-                for (let row = this.top; row >= targetRow; row--) {
-                    if (row < 0) {
-                        break;
-                    }
-                    if (this.getters.isRowHidden(sheetId, row)) {
-                        continue;
-                    }
-                    this.offsetY = this.getters.getRowDimensions(sheetId, row).start - this.offsetCorrectionY;
-                    this.offsetScrollbarY = this.offsetY;
-                    this.adjustViewportZoneY();
+                let finalTarget = targetRow;
+                while (this.getters.isRowHidden(sheetId, finalTarget) && targetRow > 0) {
+                    finalTarget--;
                 }
+                this.offsetY =
+                    this.getters.getRowDimensions(sheetId, finalTarget).start - this.offsetCorrectionY;
+                this.offsetScrollbarY = this.offsetY;
+                this.adjustViewportZoneY();
             }
         }
         setViewportOffset(offsetX, offsetY) {
@@ -36432,6 +36489,9 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             const sheetId = this.sheetId;
             this.left = this.searchHeaderIndex("COL", this.offsetScrollbarX, this.boundaries.left);
             this.right = Math.min(this.boundaries.right, this.searchHeaderIndex("COL", this.viewportWidth, this.left));
+            if (this.left === -1) {
+                this.left = this.boundaries.left;
+            }
             if (this.right === -1) {
                 this.right = this.getters.getNumberCols(sheetId) - 1;
             }
@@ -36445,6 +36505,9 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
             const sheetId = this.sheetId;
             this.top = this.searchHeaderIndex("ROW", this.offsetScrollbarY, this.boundaries.top);
             this.bottom = Math.min(this.boundaries.bottom, this.searchHeaderIndex("ROW", this.viewportHeight, this.top));
+            if (this.top === -1) {
+                this.top = this.boundaries.top;
+            }
             if (this.bottom === -1) {
                 this.bottom = this.getters.getNumberRows(sheetId) - 1;
             }
@@ -42860,9 +42923,9 @@ day_count_convention (number, default=${DEFAULT_DAY_COUNT_CONVENTION} ) ${_lt("A
     Object.defineProperty(exports, '__esModule', { value: true });
 
 
-    __info__.version = '16.0.16';
-    __info__.date = '2023-08-09T11:56:18.091Z';
-    __info__.hash = 'd5d9d12';
+    __info__.version = '16.0.20';
+    __info__.date = '2023-10-03T13:22:04.440Z';
+    __info__.hash = '3be5a75';
 
 
 })(this.o_spreadsheet = this.o_spreadsheet || {}, owl);

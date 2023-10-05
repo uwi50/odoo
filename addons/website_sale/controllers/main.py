@@ -411,6 +411,8 @@ class WebsiteSale(http.Controller):
 
         products_prices = lazy(lambda: products._get_sales_prices(pricelist))
 
+        fiscal_position_id = website._get_current_fiscal_position_id(request.env.user.partner_id)
+
         values = {
             'search': fuzzy_search_term or search,
             'original_search': fuzzy_search_term and search,
@@ -435,6 +437,7 @@ class WebsiteSale(http.Controller):
             'products_prices': products_prices,
             'get_product_prices': lambda product: lazy(lambda: products_prices[product.id]),
             'float_round': tools.float_round,
+            'fiscal_position_id': fiscal_position_id,
         }
         if filter_by_price_enabled:
             values['min_price'] = min_price or available_min_price
@@ -1627,6 +1630,7 @@ class WebsiteSale(http.Controller):
         attribute = request.env['product.attribute'].browse(attribute_id)
         if 'display_type' in options:
             attribute.write({'display_type': options['display_type']})
+            request.env['ir.qweb'].clear_caches()
 
     @http.route(['/shop/config/website'], type='json', auth='user')
     def _change_website_config(self, **options):

@@ -110,6 +110,58 @@ msgid ""
 "(technically: Server Actions) to be triggered for each incoming mail.\n"
 "    "
 msgstr ""
+"\n"
+"\n"
+"Chat, mail gateway and private channel.\n"
+"=======================================\n"
+"\n"
+"Communicate with your colleagues/customers/guest within Odoo.\n"
+"\n"
+"Discuss/Chat\n"
+"------------\n"
+"User-friendly \"Discuss\" features that allows one 2 one or group communication\n"
+"(text chat/voice call/video call), invite guests and share documents with\n"
+"them, all real-time.\n"
+"\n"
+"Mail gateway\n"
+"------------\n"
+"Sending information and documents made simplified. You can send emails\n"
+"from Odoo itself, and that too with great possibilities. For example,\n"
+"design a beautiful email template for the invoices, and use the same\n"
+"for all your customers, no need to do the same exercise every time.\n"
+"\n"
+"Chatter\n"
+"-------\n"
+"Do all the contextual conversation on a document. For example on an\n"
+"applicant, directly post an update to send email to the applicant,\n"
+"schedule the next interview call, attach the contract, add HR officer\n"
+"to the follower list to notify them for important events(with help of\n"
+"subtypes),...\n"
+"\n"
+"\n"
+"Retrieve incoming email on POP/IMAP servers.\n"
+"============================================\n"
+"Enter the parameters of your POP/IMAP account(s), and any incoming emails on\n"
+"these accounts will be automatically downloaded into your Odoo system. All\n"
+"POP3/IMAP-compatible servers are supported, included those that require an\n"
+"encrypted SSL/TLS connection.\n"
+"This can be used to easily create email-based workflows for many email-enabled Odoo documents, such as:\n"
+"----------------------------------------------------------------------------------------------------------\n"
+"    * CRM Leads/Opportunities\n"
+"    * CRM Claims\n"
+"    * Project Issues\n"
+"    * Project Tasks\n"
+"    * Human Resource Recruitment (Applicants)\n"
+"Just install the relevant application, and you can assign any of these document\n"
+"types (Leads, Project Issues) to your incoming email accounts. New emails will\n"
+"automatically spawn new documents of the chosen type, so it's a snap to create a\n"
+"mailbox-to-Odoo integration. Even better: these documents directly act as mini\n"
+"conversations synchronized by email. You can reply from within Odoo, and the\n"
+"answers will automatically be collected when they come back, and attached to the\n"
+"same *conversation* document.\n"
+"For more specific needs, you may also assign custom-defined actions\n"
+"(technically: Server Actions) to be triggered for each incoming mail.\n"
+"    "
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_dk
@@ -1307,7 +1359,7 @@ msgid ""
 "Add relation information between Sale Orders and Purchase Orders if Make to Order (MTO) is activated on one sold product.\n"
 msgstr ""
 "\n"
-"如果在一個已售產品上啟用按訂單生產 (MTO)，則增加銷售訂單和採購訂單之間的關係訊息.\n"
+"若出售產品已啟用特別訂製（MTO），會加入銷售訂單與採購訂單之間的關係資訊。\n"
 
 #. module: base
 #: model:ir.module.module,description:base.module_l10n_fr_facturx_chorus_pro
@@ -13146,7 +13198,7 @@ msgstr "欄位名稱"
 #: model:ir.module.category,name:base.module_category_services_field_service
 #: model:ir.module.module,shortdesc:base.module_industry_fsm
 msgid "Field Service"
-msgstr "欄位服務"
+msgstr "外勤服務"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_ir_model_fields__ttype
@@ -14771,7 +14823,7 @@ msgstr "圖像"
 #: model:ir.model.fields,field_description:base.field_res_partner__image_1024
 #: model:ir.model.fields,field_description:base.field_res_users__image_1024
 msgid "Image 1024"
-msgstr "畫素 1024"
+msgstr "圖像 1024"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_avatar_mixin__image_128
@@ -14779,7 +14831,7 @@ msgstr "畫素 1024"
 #: model:ir.model.fields,field_description:base.field_res_partner__image_128
 #: model:ir.model.fields,field_description:base.field_res_users__image_128
 msgid "Image 128"
-msgstr "畫素 128"
+msgstr "圖像 128"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_avatar_mixin__image_256
@@ -14787,7 +14839,7 @@ msgstr "畫素 128"
 #: model:ir.model.fields,field_description:base.field_res_partner__image_256
 #: model:ir.model.fields,field_description:base.field_res_users__image_256
 msgid "Image 256"
-msgstr "畫素 256"
+msgstr "圖像 256"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_avatar_mixin__image_512
@@ -14795,7 +14847,7 @@ msgstr "畫素 256"
 #: model:ir.model.fields,field_description:base.field_res_partner__image_512
 #: model:ir.model.fields,field_description:base.field_res_users__image_512
 msgid "Image 512"
-msgstr "畫素 512"
+msgstr "圖像 512"
 
 #. module: base
 #: model:ir.model,name:base.model_image_mixin
@@ -15276,6 +15328,12 @@ msgstr "指定的\"訂單\"無效(%s). 有效的\"順序\"規範是以逗號分�
 #, python-format
 msgid "Invalid 'group by' parameter"
 msgstr "無效的「分組」參數"
+
+#. module: base
+#: code:addons/template_inheritance.py:0
+#, python-format
+msgid "Invalid Expression while parsing xpath %r"
+msgstr ""
 
 #. module: base
 #: code:addons/base/models/ir_default.py:0
@@ -16511,7 +16569,7 @@ msgstr ""
 #. module: base
 #: model:ir.module.module,summary:base.module_sale_subscription
 msgid "MRR, Churn, Recurring payments"
-msgstr ""
+msgstr "MRR、客戶流失、經常付款"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_sale_purchase_stock
@@ -25997,7 +26055,7 @@ msgstr "千位分隔符"
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_lang__week_start__4
 msgid "Thursday"
-msgstr "四"
+msgstr "星期四"
 
 #. module: base
 #: model:ir.model.fields,field_description:base.field_res_lang__time_format
@@ -26302,7 +26360,7 @@ msgstr "特裡尼達和多巴哥"
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_lang__week_start__2
 msgid "Tuesday"
-msgstr "二"
+msgstr "星期二"
 
 #. module: base
 #: model:res.country,name:base.tn
@@ -26357,12 +26415,12 @@ msgstr "推特片段"
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_website_twitter_wall
 msgid "Twitter Wall"
-msgstr "推特牆"
+msgstr "Twitter 訊息牆"
 
 #. module: base
 #: model:ir.module.module,summary:base.module_website_twitter
 msgid "Twitter scroller snippet in website"
-msgstr "網站上的推特(Twitter)滾動條代碼段"
+msgstr "網站內 Twitter 捲動小資料"
 
 #. module: base
 #: model:ir.module.module,shortdesc:base.module_auth_totp
@@ -26396,6 +26454,15 @@ msgid ""
 "- 'Create Next Activity': create an activity (Discuss)\n"
 "- 'Send SMS Text Message': send SMS, log them on documents (SMS)"
 msgstr ""
+"伺服器操作類型。可使用以下的值：\n"
+"- 「執行 Python 程式碼」：將執行的一段 Python 程式碼\n"
+"- 「建立新記錄」：使用新的值建立新記錄\n"
+"- 「更新記錄」：更新記錄的值\n"
+"- 「執行多個操作」：定義一個操作以觸發多個其他伺服器操作\n"
+"- 「發送電郵」：張貼訊息、備註或發送電子郵件（聊天應用程式）\n"
+"- 「加入關注者」：將關注者加至記錄（聊天應用程式）\n"
+"- 「建立下一活動」：建立一個活動（聊天應用程式）\n"
+"- 「發送 SMS 簡訊」：發送 SMS 文字短訊，將其記錄在文件上（短訊應用程式）"
 
 #. module: base
 #: model:ir.model.fields,help:base.field_ir_model_constraint__type
@@ -27562,7 +27629,7 @@ msgstr "網站簡介"
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__res_lang__week_start__3
 msgid "Wednesday"
-msgstr "三"
+msgstr "星期三"
 
 #. module: base
 #: model:ir.model.fields.selection,name:base.selection__ir_cron__interval_type__weeks

@@ -61,7 +61,7 @@ msgstr ""
 #: code:addons/loyalty/models/loyalty_reward.py:0
 #, python-format
 msgid " (Max %s)"
-msgstr ""
+msgstr " (最大 %s)"
 
 #. module: loyalty
 #. odoo-python
@@ -101,7 +101,7 @@ msgstr ""
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_reward_view_kanban
 msgid "( Max"
-msgstr ""
+msgstr "( 最大"
 
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_reward_view_kanban
@@ -1217,7 +1217,7 @@ msgstr "ロイヤルティカード"
 #. module: loyalty
 #: model:ir.model,name:loyalty.model_loyalty_mail
 msgid "Loyalty Communication"
-msgstr ""
+msgstr "ロイヤリティコミュニケーション"
 
 #. module: loyalty
 #: model:ir.model,name:loyalty.model_loyalty_card
@@ -1472,7 +1472,7 @@ msgstr "プログラムトリガー"
 #: code:addons/loyalty/models/loyalty_program.py:0
 #, python-format
 msgid "Promotion Program"
-msgstr ""
+msgstr "プロモーションプログラム"
 
 #. module: loyalty
 #. odoo-python
@@ -1862,7 +1862,7 @@ msgstr ""
 #: model:ir.model.fields.selection,name:loyalty.selection__loyalty_program__program_type__ewallet
 #, python-format
 msgid "eWallet"
-msgstr ""
+msgstr "eWallet"
 
 #. module: loyalty
 #: model_terms:ir.ui.view,arch_db:loyalty.loyalty_program_view_form

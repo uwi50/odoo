@@ -6,7 +6,6 @@
        margin-right: auto;
     }
     &.header {
-        margin-left: 10px;
         table {
             width: 100%;
             img, h3, div.h3, td, tr {
@@ -25,8 +24,6 @@
         }
     }
     &.invoice_note {
-        padding-top: 10px;
-        margin-left: 10px;
         tr {
             td {
                 vertical-align: bottom;
@@ -89,7 +86,7 @@
         }
     }
     &.footer {
-        margin-left: 10px;
+        padding-left: 5mm;
         padding-right: 10mm;
         .page_number {
             margin-top: 4.23mm;
@@ -112,6 +109,11 @@
             }
         }
     }
+}
+
+.din_page_pdf {
+    width: 180mm;
+    margin-left: -1rem;
 }
 
 
