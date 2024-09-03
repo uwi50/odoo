@@ -77,6 +77,9 @@ class HrContract(models.Model):
         ]
         return expression.AND([domain, self._get_sub_leave_domain()])
 
+    def _get_resource_calendar_leaves(self, start_dt, end_dt):
+        return self.env['resource.calendar.leaves'].search(self._get_leave_domain(start_dt, end_dt))
+
     def _get_attendance_intervals(self, start_dt, end_dt):
         # {resource: intervals}
         employees_by_calendar = defaultdict(lambda: self.env['hr.employee'])
@@ -101,7 +104,7 @@ class HrContract(models.Model):
 
         attendances_by_resource = self._get_attendance_intervals(start_dt, end_dt)
 
-        resource_calendar_leaves = self.env['resource.calendar.leaves'].search(self._get_leave_domain(start_dt, end_dt))
+        resource_calendar_leaves = self._get_resource_calendar_leaves(start_dt, end_dt)
         # {resource: resource_calendar_leaves}
         leaves_by_resource = defaultdict(lambda: self.env['resource.calendar.leaves'])
         for leave in resource_calendar_leaves:
@@ -394,18 +397,19 @@ class HrContract(models.Model):
             for contract in self:
                 date_from = max(contract.date_start, contract.date_generated_from.date())
                 date_to = min(contract.date_end or date.max, contract.date_generated_to.date())
-                if date_from != date_to:
+                if date_from != date_to and self.employee_id:
                     contract._recompute_work_entries(date_from, date_to)
         return result
 
     def _recompute_work_entries(self, date_from, date_to):
         self.ensure_one()
-        wizard = self.env['hr.work.entry.regeneration.wizard'].create({
-            'employee_ids': [(4, self.employee_id.id)],
-            'date_from': date_from,
-            'date_to': date_to,
-        })
-        wizard.with_context(work_entry_skip_validation=True).regenerate_work_entries()
+        if self.employee_id:
+            wizard = self.env['hr.work.entry.regeneration.wizard'].create({
+                'employee_ids': [(4, self.employee_id.id)],
+                'date_from': date_from,
+                'date_to': date_to,
+            })
+            wizard.with_context(work_entry_skip_validation=True).regenerate_work_entries()
 
     def _get_fields_that_recompute_we(self):
         # Returns the fields that should recompute the work entries

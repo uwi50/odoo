@@ -184,7 +184,7 @@ class SaleOrder(models.Model):
     currency_rate = fields.Float(
         string="Currency Rate",
         compute='_compute_currency_rate',
-        digits=(12, 6),
+        digits=0,
         store=True, precompute=True)
     user_id = fields.Many2one(
         comodel_name='res.users',
@@ -382,7 +382,7 @@ class SaleOrder(models.Model):
     def _compute_currency_rate(self):
         cache = {}
         for order in self:
-            order_date = order.date_order.date()
+            order_date = (order.date_order or fields.Datetime.now()).date()
             if not order.company_id:
                 order.currency_rate = order.currency_id.with_context(date=order_date).rate or 1.0
                 continue
@@ -416,7 +416,7 @@ class SaleOrder(models.Model):
     def _compute_team_id(self):
         cached_teams = {}
         for order in self:
-            default_team_id = self.env.context.get('default_team_id', False) or order.team_id.id or order.partner_id.team_id.id
+            default_team_id = self.env.context.get('default_team_id', False) or order.partner_id.team_id.id or order.team_id.id
             user_id = order.user_id.id
             company_id = order.company_id.id
             key = (default_team_id, user_id, company_id)
@@ -431,10 +431,11 @@ class SaleOrder(models.Model):
     def _compute_amounts(self):
         """Compute the total amounts of the SO."""
         for order in self:
+            order = order.with_company(order.company_id)
             order_lines = order.order_line.filtered(lambda x: not x.display_type)
 
             if order.company_id.tax_calculation_rounding_method == 'round_globally':
-                tax_results = self.env['account.tax']._compute_taxes([
+                tax_results = order.env['account.tax']._compute_taxes([
                     line._convert_to_tax_base_line_dict()
                     for line in order_lines
                 ])
@@ -559,9 +560,13 @@ class SaleOrder(models.Model):
                 lambda line: not line.display_type and not line._is_delivery()
             ).mapped(lambda line: line and line._expected_date())
             if dates_list:
-                order.expected_date = min(dates_list)
+                order.expected_date = order._select_expected_date(dates_list)
             else:
                 order.expected_date = False
+
+    def _select_expected_date(self, expected_dates):
+        self.ensure_one()
+        return min(expected_dates)
 
     def _compute_is_expired(self):
         today = fields.Date.today()
@@ -588,11 +593,13 @@ class SaleOrder(models.Model):
                 order.partner_credit_warning = self.env['account.move']._build_credit_warning_message(
                     order, updated_credit)
 
+    @api.depends_context('lang')
     @api.depends('order_line.tax_id', 'order_line.price_unit', 'amount_total', 'amount_untaxed', 'currency_id')
     def _compute_tax_totals(self):
         for order in self:
+            order = order.with_company(order.company_id)
             order_lines = order.order_line.filtered(lambda x: not x.display_type)
-            order.tax_totals = self.env['account.tax']._prepare_tax_totals(
+            order.tax_totals = order.env['account.tax']._prepare_tax_totals(
                 [x._convert_to_tax_base_line_dict() for x in order_lines],
                 order.currency_id or order.company_id.currency_id,
             )
@@ -820,7 +827,9 @@ class SaleOrder(models.Model):
         context.pop('default_name', None)
 
         self.with_context(context)._action_confirm()
-        if self.env.user.has_group('sale.group_auto_done_setting'):
+
+        if self[:1].create_uid.has_group('sale.group_auto_done_setting'):
+            # Public user can confirm SO, so we check the group on any record creator.
             self.action_done()
 
         return True
@@ -871,11 +880,6 @@ class SaleOrder(models.Model):
             )
 
     def action_done(self):
-        for order in self:
-            tx = order.sudo().transaction_ids._get_last()
-            if tx and tx.state == 'pending' and tx.provider_id.code == 'custom':
-                tx._set_done()
-                tx.write({'is_post_processed': True})
         self.write({'state': 'done'})
 
     def action_unlock(self):
@@ -1221,7 +1225,10 @@ class SaleOrder(models.Model):
     def message_post(self, **kwargs):
         if self.env.context.get('mark_so_as_sent'):
             self.filtered(lambda o: o.state == 'draft').with_context(tracking_disable=True).write({'state': 'sent'})
-        return super(SaleOrder, self.with_context(mail_post_autofollow=self.env.context.get('mail_post_autofollow', True))).message_post(**kwargs)
+        return super(SaleOrder, self.with_context(
+            mail_post_autofollow=self.env.context.get('mail_post_autofollow', True),
+            lang=self.partner_id.lang,
+        )).message_post(**kwargs)
 
     def _notify_get_recipients_groups(self, msg_vals=None):
         """ Give access button to users and portal customer as portal is integrated
@@ -1269,7 +1276,7 @@ class SaleOrder(models.Model):
 
         return groups
 
-    def _notify_by_email_prepare_rendering_context(self, message, msg_vals, model_description=False,
+    def _notify_by_email_prepare_rendering_context(self, message, msg_vals=False, model_description=False,
                                                    force_email_company=False, force_email_lang=False):
         render_context = super()._notify_by_email_prepare_rendering_context(
             message, msg_vals, model_description=model_description,
@@ -1499,3 +1506,13 @@ class SaleOrder(models.Model):
         # Override for correct taxcloud computation
         # when using coupon and delivery
         return True
+
+    #=== TOOLING ===#
+
+    def _get_lang(self):
+        self.ensure_one()
+
+        if self.partner_id.lang and not self.partner_id.is_public:
+            return self.partner_id.lang
+
+        return self.env.lang

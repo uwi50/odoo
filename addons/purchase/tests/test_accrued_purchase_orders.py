@@ -13,8 +13,8 @@ class TestAccruedPurchaseOrders(AccountTestInvoicingCommon):
         super().setUpClass(chart_template_ref=chart_template_ref)
         cls.alt_exp_account = cls.company_data['default_account_expense'].copy()
         # set 'type' to 'service' to allow manualy set 'qty_delivered' even with purchase_stock installed
-        cls.product_a.type = 'service'
-        cls.product_b.type = 'service'
+        cls.product_a.update({'type': 'service', 'purchase_method': 'receive'})
+        cls.product_b.update({'type': 'service', 'purchase_method': 'receive'})
         #analytic distribution
         cls.default_plan = cls.env['account.analytic.plan'].create({'name': 'Default', 'company_id': False})
         cls.analytic_account_a = cls.env['account.analytic.account'].create({
@@ -120,4 +120,24 @@ class TestAccruedPurchaseOrders(AccountTestInvoicingCommon):
             {'account_id': self.account_expense.id, 'debit': 10000.0, 'credit': 0.0, 'analytic_distribution': {str(self.analytic_account_a.id): 80.0, str(self.analytic_account_b.id): 20.0}},
             {'account_id': self.alt_exp_account.id, 'debit': 2000.0, 'credit': 0.0, 'analytic_distribution': {str(self.analytic_account_b.id): 100.0}},
             {'account_id': self.account_revenue.id, 'debit': 0.0, 'credit': 12000.0, 'analytic_distribution': {str(self.analytic_account_a.id): 66.67, str(self.analytic_account_b.id): 33.33}},
+        ])
+
+    def test_accrued_order_with_tax_included(self):
+        tax_10_included = self.env['account.tax'].create({
+            'name': 'Tax 10% included',
+            'amount': 10.0,
+            'type_tax_use': 'purchase',
+            'price_include': True,
+        })
+        self.purchase_order.order_line.taxes_id = tax_10_included
+        self.purchase_order.order_line.qty_received = 5
+        self.assertRecordValues(self.env['account.move'].search(self.wizard.create_entries()['domain']).line_ids, [
+            # reverse move lines
+            {'account_id': self.account_expense.id, 'debit': 0.0, 'credit': 4545.45},
+            {'account_id': self.alt_exp_account.id, 'debit': 0.0, 'credit': 909.09},
+            {'account_id': self.account_revenue.id, 'debit': 5454.54, 'credit': 0.0},
+            # move lines
+            {'account_id': self.account_expense.id, 'debit': 4545.45, 'credit': 0.0},
+            {'account_id': self.alt_exp_account.id, 'debit': 909.09, 'credit': 0.0},
+            {'account_id': self.account_revenue.id, 'debit': 0.0, 'credit': 5454.54},
         ])

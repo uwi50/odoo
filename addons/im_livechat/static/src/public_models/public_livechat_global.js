@@ -5,6 +5,7 @@ import { attr, many, one } from '@mail/model/model_field';
 import { clear } from '@mail/model/model_field_command';
 
 import { session } from "@web/session";
+import legacySession from "web.session";
 
 import { qweb } from 'web.core';
 import { Markup } from 'web.utils';
@@ -46,7 +47,7 @@ registerModel({
             await this._willStartChatbot();
         },
         async _willStart() {
-            const strCookie = getCookie('im_livechat_session');
+            const strCookie = decodeURIComponent(getCookie('im_livechat_session'));
             let isSessionCookieAvailable = Boolean(strCookie);
             let cookie = JSON.parse(strCookie || '{}');
             if (isSessionCookieAvailable && cookie.visitor_uid !== session.user_id) {
@@ -77,7 +78,11 @@ registerModel({
                 }
                 this.update({ rule: result.rule });
             }
-            return this.loadQWebTemplate();
+            const proms = [this.loadQWebTemplate()];
+            if (!session.is_frontend) {
+                proms.push(legacySession.load_translations(["im_livechat"]));
+            }
+            return Promise.all(proms);
         },
         /**
          * This override handles the following use cases:
@@ -108,7 +113,7 @@ registerModel({
                     }),
                 });
             } else if (this.history !== null && this.history.length !== 0) {
-                const sessionCookie = getCookie('im_livechat_session');
+                const sessionCookie = decodeURIComponent(getCookie('im_livechat_session'));
                 if (sessionCookie) {
                     this.update({ sessionCookie });
                 }
@@ -141,7 +146,7 @@ registerModel({
         },
 
         getVisitorUserId() {
-            const cookie = JSON.parse(getCookie("im_livechat_session") || "{}");
+            const cookie = JSON.parse(decodeURIComponent(getCookie("im_livechat_session")) || "{}");
             if ("visitor_uid" in cookie) {
                 return cookie.visitor_uid;
             }
@@ -153,7 +158,7 @@ registerModel({
          * this will deactivate the mail_channel, notify operator that visitor has left the channel.
          */
         leaveSession() {
-            const cookie = getCookie('im_livechat_session');
+            const cookie = decodeURIComponent(getCookie('im_livechat_session'));
             if (cookie) {
                 const channel = JSON.parse(cookie);
                 if (channel.uuid) {

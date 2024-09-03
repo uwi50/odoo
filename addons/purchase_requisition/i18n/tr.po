@@ -18,18 +18,18 @@
 # Martin Trigaux, 2022
 # Murat Kaplan <muratk@projetgrup.com>, 2022
 # Ediz Duman <neps1192@gmail.com>, 2023
-# Ertuğrul Güreş <ertugrulg@projetgrup.com>, 2023
 # Tugay Hatıl <tugayh@projetgrup.com>, 2023
 # Ayhan KIZILTAN <akiziltan76@hotmail.com>, 2023
 # Melih Melik Sonmez, 2023
+# Ertuğrul Güreş <ertugrulg@projetgrup.com>, 2023
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-23 08:23+0000\n"
+"POT-Creation-Date: 2024-02-06 13:32+0000\n"
 "PO-Revision-Date: 2022-09-22 05:54+0000\n"
-"Last-Translator: Melih Melik Sonmez, 2023\n"
+"Last-Translator: Ertuğrul Güreş <ertugrulg@projetgrup.com>, 2023\n"
 "Language-Team: Turkish (https://app.transifex.com/odoo/teams/41243/tr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -59,13 +59,13 @@ msgstr "<strong>Açıklama:</strong>"
 
 #. module: purchase_requisition
 #: model_terms:ir.ui.view,arch_db:purchase_requisition.report_purchaserequisitions
-msgid "<strong>Product</strong>"
-msgstr "<strong>Ürün</strong>"
+msgid "<strong>Product UoM</strong>"
+msgstr "<strong>Ürün Ölçü Birimi</strong>"
 
 #. module: purchase_requisition
 #: model_terms:ir.ui.view,arch_db:purchase_requisition.report_purchaserequisitions
-msgid "<strong>Product UoM</strong>"
-msgstr "<strong>Ürün Ölçü Birimi</strong>"
+msgid "<strong>Product</strong>"
+msgstr "<strong>Ürün</strong>"
 
 #. module: purchase_requisition
 #: model_terms:ir.ui.view,arch_db:purchase_requisition.report_purchaserequisitions
@@ -224,7 +224,7 @@ msgstr "Kapsamlı Sipariş"
 #: model:ir.actions.act_window,name:purchase_requisition.action_purchase_requisition
 #: model:ir.ui.menu,name:purchase_requisition.menu_purchase_requisition_pro_mgt
 msgid "Blanket Orders"
-msgstr "Battaniye Siparişleri"
+msgstr "Bağlantı Siparişleri"
 
 #. module: purchase_requisition
 #: model_terms:ir.ui.view,arch_db:purchase_requisition.purchase_requisition_alternative_warning_form

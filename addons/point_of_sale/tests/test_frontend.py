@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
+import logging
 from odoo import Command
+
 from odoo.api import Environment
 from odoo.tools import DEFAULT_SERVER_DATE_FORMAT
+from odoo.tests import loaded_demo_data, tagged
 from odoo.addons.account.tests.common import AccountTestInvoicingHttpCommon
 from datetime import date, timedelta
 
-import odoo.tests
+_logger = logging.getLogger(__name__)
 
 
 class TestPointOfSaleHttpCommon(AccountTestInvoicingHttpCommon):
@@ -66,13 +69,19 @@ class TestPointOfSaleHttpCommon(AccountTestInvoicingHttpCommon):
         (all_pos_product - discount - cls.tip)._write({'active': False})
 
         # In DESKS categ: Desk Pad
-        pos_categ_desks = env.ref('point_of_sale.pos_category_desks')
+        pos_categ_desks = env.ref('point_of_sale.pos_category_desks', raise_if_not_found=False)
+        if not pos_categ_desks:
+            pos_categ_desks = cls.env['pos.category'].create({'name': 'Desk'})
 
         # In DESKS categ: Whiteboard Pen
-        pos_categ_misc = env.ref('point_of_sale.pos_category_miscellaneous')
+        pos_categ_misc = env.ref('point_of_sale.pos_category_miscellaneous', raise_if_not_found=False)
+        if not pos_categ_misc:
+            pos_categ_misc = cls.env['pos.category'].create({'name': 'Misc'})
 
         # In CHAIR categ: Letter Tray
-        pos_categ_chairs = env.ref('point_of_sale.pos_category_chairs')
+        pos_categ_chairs = env.ref('point_of_sale.pos_category_chairs', raise_if_not_found=False)
+        if not pos_categ_chairs:
+            pos_categ_chairs = cls.env['pos.category'].create({'name': 'Chairs'})
 
         # test an extra price on an attribute
         cls.whiteboard_pen = env['product.product'].create({
@@ -477,9 +486,12 @@ class TestPointOfSaleHttpCommon(AccountTestInvoicingHttpCommon):
         env['ir.property']._set_default("property_product_pricelist", "res.partner", public_pricelist, main_company)
 
 
-@odoo.tests.tagged('post_install', '-at_install')
+@tagged('post_install', '-at_install')
 class TestUi(TestPointOfSaleHttpCommon):
     def test_01_pos_basic_order(self):
+        if not loaded_demo_data(self.env):
+            _logger.warning("This test relies on demo data. To be rewritten independently of demo data for accurate and reliable results.")
+            return
 
         self.main_pos_config.write({
             'iface_tipproduct': True,
@@ -509,6 +521,9 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.assertEqual(email_count, 1)
 
     def test_02_pos_with_invoiced(self):
+        if not loaded_demo_data(self.env):
+            _logger.warning("This test relies on demo data. To be rewritten independently of demo data for accurate and reliable results.")
+            return
         self.main_pos_config.open_ui()
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'ChromeTour', login="accountman")
         n_invoiced = self.env['pos.order'].search_count([('state', '=', 'invoiced')])
@@ -521,7 +536,17 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.main_pos_config.open_ui()
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config, 'ProductConfiguratorTour', login="accountman")
 
+    def test_product_configurator_inactive_attribute_value(self):
+        configurable_product = self.env['product.product'].search([('name', '=', 'Configurable Chair'), ('available_in_pos', '=', 'True')], limit=1)
+        fabrics_line = configurable_product.attribute_line_ids[2]
+        fabrics_line.product_template_value_ids[0].ptav_active = False
+        self.main_pos_config.open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config, 'InactiveAttributeValueTour', login="accountman")
+
     def test_05_ticket_screen(self):
+        if not loaded_demo_data(self.env):
+            _logger.warning("This test relies on demo data. To be rewritten independently of demo data for accurate and reliable results.")
+            return
         self.main_pos_config.open_ui()
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'TicketScreenTour', login="accountman")
 
@@ -673,6 +698,7 @@ class TestUi(TestPointOfSaleHttpCommon):
         self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'PaymentScreenRoundingHalfUp', login="accountman")
 
     def test_rounding_half_up_cash_and_bank(self):
+        self.env['res.partner'].create({'name': 'Nicole Ford'})
         company = self.main_pos_config.company_id
         rouding_method = self.env['account.cash.rounding'].create({
             'name': 'Rounding HALF-UP',
@@ -1025,3 +1051,76 @@ class TestUi(TestPointOfSaleHttpCommon):
 
         self.main_pos_config.open_ui()
         self.start_tour("/pos/ui?debug=1&config_id=%d" % self.main_pos_config.id, 'limitedProductPricelistLoading', login="accountman")
+
+    def test_receipt_tracking_method(self):
+        self.product_a = self.env['product.product'].create({
+            'name': 'Product A',
+            'type': 'product',
+            'tracking': 'lot',
+            'categ_id': self.env.ref('product.product_category_all').id,
+            'available_in_pos': True,
+        })
+        self.main_pos_config.open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'ReceiptTrackingMethodTour', login="accountman")
+
+    def test_fiscal_position_two_tax_included(self):
+        """This tests make sure that if both tax in a fiscal position are tax included, the total price is still the same
+           but only the tax amount is modified"""
+
+        tax_1 = self.env['account.tax'].create({
+            'name': 'Tax 10%',
+            'amount': 10,
+            'price_include': True,
+            'amount_type': 'percent',
+            'type_tax_use': 'sale',
+        })
+
+        tax_2 = self.env['account.tax'].create({
+            'name': 'Tax 5%',
+            'amount': 5,
+            'price_include': True,
+            'amount_type': 'percent',
+            'type_tax_use': 'sale',
+        })
+
+        self.product = self.env['product.product'].create({
+            'name': 'Test Product',
+            'taxes_id': [(6, 0, [tax_1.id])],
+            'list_price': 100,
+            'available_in_pos': True,
+        })
+
+        fiscal_position = self.env['account.fiscal.position'].create({
+            'name': 'test fp',
+            'tax_ids': [(0, 0, {
+                'tax_src_id': tax_1.id,
+                'tax_dest_id': tax_2.id,
+            })],
+        })
+
+        self.main_pos_config.write({
+            'tax_regime_selection': True,
+            'fiscal_position_ids': [(6, 0, [fiscal_position.id])],
+        })
+        self.main_pos_config.open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'FiscalPositionTwoTaxIncluded', login="accountman")
+
+    def test_cash_rounding_payment(self):
+        """Verify than an error popup is shown if the payment value is more precise than the rounding method"""
+        rounding_method = self.env['account.cash.rounding'].create({
+            'name': 'Down 0.10',
+            'rounding': 0.10,
+            'strategy': 'add_invoice_line',
+            'profit_account_id': self.company_data['default_account_revenue'].copy().id,
+            'loss_account_id': self.company_data['default_account_expense'].copy().id,
+            'rounding_method': 'DOWN',
+        })
+
+        self.main_pos_config.write({
+            'cash_rounding': True,
+            'only_round_cash_method': False,
+            'rounding_method': rounding_method.id,
+        })
+
+        self.main_pos_config.open_ui()
+        self.start_tour("/pos/ui?config_id=%d" % self.main_pos_config.id, 'CashRoundingPayment', login="accountman")

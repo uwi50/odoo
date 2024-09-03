@@ -198,7 +198,6 @@ registerModel({
                 if (!this.messaging) {
                     return false;
                 }
-
                 if (this.messages.length && this.originThread && this.originThread.model === 'mail.channel') {
                     return this.messages.some(message => (
                         message.canBeDeleted ||

@@ -4,6 +4,7 @@
 from collections import defaultdict
 
 from odoo import api, fields, models, _, Command
+from odoo.tools.misc import clean_context
 from odoo.tools.safe_eval import safe_eval
 
 
@@ -110,13 +111,14 @@ class SaleOrder(models.Model):
     def _action_confirm(self):
         """ On SO confirmation, some lines should generate a task or a project. """
         result = super()._action_confirm()
+        context = clean_context(self._context)
         if len(self.company_id) == 1:
             # All orders are in the same company
-            self.order_line.sudo().with_company(self.company_id)._timesheet_service_generation()
+            self.order_line.sudo().with_company(self.company_id).with_context(context)._timesheet_service_generation()
         else:
             # Orders from different companies are confirmed together
             for order in self:
-                order.order_line.sudo().with_company(order.company_id)._timesheet_service_generation()
+                order.order_line.sudo().with_company(order.company_id).with_context(context)._timesheet_service_generation()
         return result
 
     def action_view_task(self):
@@ -147,7 +149,6 @@ class SaleOrder(models.Model):
         # filter on the task of the current SO
         action['domain'] = [('id', 'in', self.tasks_ids.ids)]
         action.setdefault('context', {})
-        action['context'].update({'search_default_sale_order_id': self.id})
         return action
 
     def action_view_project_ids(self):
@@ -156,12 +157,12 @@ class SaleOrder(models.Model):
         view_kanban_id = self.env.ref('project.view_project_kanban').id
         action = {
             'type': 'ir.actions.act_window',
-            'domain': [('id', 'in', self.project_ids.ids)],
+            'domain': [('id', 'in', self.with_context(active_test=False).project_ids.ids), ('active', 'in', [True, False])],
             'view_mode': 'kanban,form',
             'name': _('Projects'),
             'res_model': 'project.project',
         }
-        if len(self.project_ids) == 1:
+        if len(self.with_context(active_test=False).project_ids) == 1:
             action.update({'views': [(view_form_id, 'form')], 'res_id': self.project_ids.id})
         else:
             action['views'] = [(view_kanban_id, 'kanban'), (view_form_id, 'form')]

@@ -314,6 +314,12 @@ class TranslationToolsTestCase(BaseCase):
         result = html_translate(lambda term: term, source)
         self.assertEqual(result, source)
 
+    def test_translate_html_nbsp(self):
+        """ Test html_translate(). """
+        source = """<blockquote>A&nbsp;<h2>B&#160</h2>\xa0C</blockquote>"""
+        result = html_translate(lambda term: term, source)
+        self.assertEqual(result, '<blockquote>A&nbsp;<h2>B&nbsp;</h2>&nbsp;C</blockquote>')
+
     def test_translate_html_i(self):
         """ Test xml_translate() and html_translate() with <i> elements. """
         source = """<p>A <i class="fa-check"></i> B</p>"""
@@ -1063,6 +1069,30 @@ class TestXMLTranslation(TransactionCase):
         self.assertEqual(view.with_env(env_en).arch_db, archf % terms_en)
         self.assertEqual(view.with_env(env_fr).arch_db, archf % (terms_fr[0], terms_en[1], terms_en[2]))
         self.assertEqual(view.with_env(env_nl).arch_db, archf % (terms_nl[0], terms_en[1], terms_en[2]))
+
+    def test_sync_xml_close_terms(self):
+        """ Check translations of 'arch' after xml tags changes in source terms. """
+        archf = '<form string="X">%s<div>%s</div>%s</form>'
+        terms_en = ('RandomRandom1', 'RandomRandom2', 'RandomRandom3')
+        terms_fr = ('RandomRandom1', 'AléatoireAléatoire2', 'AléatoireAléatoire3')
+        view = self.create_view(archf, terms_en, en_US=terms_en, fr_FR=terms_fr)
+
+        env_nolang = self.env(context={})
+        env_en = self.env(context={'lang': 'en_US'})
+        env_fr = self.env(context={'lang': 'fr_FR'})
+
+        self.assertEqual(view.with_env(env_nolang).arch_db, archf % terms_en)
+        self.assertEqual(view.with_env(env_en).arch_db, archf % terms_en)
+        self.assertEqual(view.with_env(env_fr).arch_db, archf % terms_fr)
+
+        # modify source term in view
+        terms_en = ('RandomRandom1', 'SomethingElse', 'RandomRandom3')
+        view.with_env(env_en).write({'arch_db': archf % terms_en})
+
+        # check whether close terms have correct translations
+        self.assertEqual(view.with_env(env_nolang).arch_db, archf % terms_en)
+        self.assertEqual(view.with_env(env_en).arch_db, archf % terms_en)
+        self.assertEqual(view.with_env(env_fr).arch_db, archf % ('RandomRandom1', 'SomethingElse', 'AléatoireAléatoire3'))
 
     def test_cache_consistency(self):
         view = self.env["ir.ui.view"].create({

@@ -132,7 +132,7 @@ class ReplenishmentReport(models.AbstractModel):
         assert product_template_ids or product_variant_ids
         res = {}
 
-        if self.env.context.get('warehouse'):
+        if self.env.context.get('warehouse') and isinstance(self.env.context['warehouse'], int):
             warehouse = self.env['stock.warehouse'].browse(self.env.context.get('warehouse'))
         else:
             warehouse = self.env['stock.warehouse'].browse(self.get_warehouses()[0]['id'])
@@ -280,7 +280,7 @@ class ReplenishmentReport(models.AbstractModel):
                 if float_is_zero(demand, precision_rounding=product_rounding):
                     continue
                 current = currents[product.id]
-                taken_from_stock = min(demand, current)
+                taken_from_stock = min(demand, current) if out.procure_method != 'make_to_order' else 0
                 if not float_is_zero(taken_from_stock, precision_rounding=product_rounding):
                     currents[product.id] -= taken_from_stock
                     demand -= taken_from_stock

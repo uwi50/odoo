@@ -52,7 +52,7 @@ def clean_action(action, env):
     return cleaned_action
 
 
-def ensure_db(redirect='/web/database/selector'):
+def ensure_db(redirect='/web/database/selector', db=None):
     # This helper should be used in web client auth="none" routes
     # if those routes needs a db to work with.
     # If the heuristics does not find any database, then the users will be
@@ -60,7 +60,8 @@ def ensure_db(redirect='/web/database/selector'):
     # If the db is taken out of a query parameter, it will be checked against
     # `http.db_filter()` in order to ensure it's legit and thus avoid db
     # forgering that could lead to xss attacks.
-    db = request.params.get('db') and request.params.get('db').strip()
+    if db is None:
+        db = request.params.get('db') and request.params.get('db').strip()
 
     # Ensure db is legit
     if db and db not in http.db_filter([db]):
@@ -77,7 +78,7 @@ def ensure_db(redirect='/web/database/selector'):
         url_redirect = werkzeug.urls.url_parse(r.base_url)
         if r.query_string:
             # in P3, request.query_string is bytes, the rest is text, can't mix them
-            query_string = iri_to_uri(r.query_string)
+            query_string = iri_to_uri(r.query_string.decode())
             url_redirect = url_redirect.replace(query=query_string)
         request.session.db = db
         werkzeug.exceptions.abort(request.redirect(url_redirect.to_url(), 302))

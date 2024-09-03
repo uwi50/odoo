@@ -3,10 +3,8 @@ import {
     closestBlock,
     closestElement,
     endPos,
-    fillEmpty,
     getListMode,
     isBlock,
-    isEmptyBlock,
     isVisibleEmpty,
     moveNodes,
     preserveCursor,
@@ -19,9 +17,20 @@ import {
     EMAIL_REGEX,
     URL_REGEX_WITH_INFOS,
     unwrapContents,
+    padLinkWithZws,
+    getTraversedNodes,
+    ZERO_WIDTH_CHARS_REGEX,
+    setSelection,
+    isVisible,
 } from './utils.js';
 
 const NOT_A_NUMBER = /[^\d]/g;
+
+function hasPseudoElementContent (node, pseudoSelector) {
+    const content = getComputedStyle(node, pseudoSelector).getPropertyValue('content');
+    return content && content !== 'none';
+}
+
 export function areSimilarElements(node, node2) {
     if (
         !node ||
@@ -53,7 +62,8 @@ export function areSimilarElements(node, node2) {
         isNotNoneValue(getComputedStyle(node, ':before').getPropertyValue('content')) ||
         isNotNoneValue(getComputedStyle(node, ':after').getPropertyValue('content')) ||
         isNotNoneValue(getComputedStyle(node2, ':before').getPropertyValue('content')) ||
-        isNotNoneValue(getComputedStyle(node2, ':after').getPropertyValue('content'))
+        isNotNoneValue(getComputedStyle(node2, ':after').getPropertyValue('content')) ||
+        isFontAwesome(node) || isFontAwesome(node2)
     ) {
         return false;
     }
@@ -87,7 +97,7 @@ export function areSimilarElements(node, node2) {
  * @returns {String|null}
  */
 function deduceURLfromLabel(link) {
-    const label = link.innerText.trim();
+    const label = link.innerText.trim().replace(ZERO_WIDTH_CHARS_REGEX, '');
     // Check first for e-mail.
     let match = label.match(EMAIL_REGEX);
     if (match) {
@@ -111,6 +121,13 @@ function deduceURLfromLabel(link) {
         }
     }
     return null;
+}
+
+function shouldPreserveCursor(node, root) {
+    const selection = root.ownerDocument.getSelection();
+    return node.isConnected && selection &&
+        selection.anchorNode && root.contains(selection.anchorNode) &&
+        selection.focusNode && root.contains(selection.focusNode);
 }
 
 class Sanitize {
@@ -170,8 +187,7 @@ class Sanitize {
                 !isEditorTab(node)
             ) {
                 getDeepRange(this.root, { select: true });
-                const restoreCursor = node.isConnected &&
-                    preserveCursor(this.root.ownerDocument);
+                const restoreCursor = shouldPreserveCursor(node, this.root) && preserveCursor(this.root.ownerDocument);
                 const nodeP = node.previousSibling;
                 moveNodes(...endPos(node.previousSibling), node);
                 if (restoreCursor) {
@@ -189,7 +205,7 @@ class Sanitize {
             const anchor = selection && selection.anchorNode;
             const anchorEl = anchor && closestElement(anchor);
             // Remove zero-width spaces added by `fillEmpty` when there is
-            // content and the selection is not next to it.
+            // content.
             if (
                 node.nodeType === Node.TEXT_NODE &&
                 node.textContent.includes('\u200B') &&
@@ -206,36 +222,60 @@ class Sanitize {
                             sibling.length > 0
                     )
                 ) &&
-                !isBlock(node.parentElement) &&
-                anchor !== node
+                !isBlock(node.parentElement)
             ) {
-                const restoreCursor = node.isConnected &&
-                    preserveCursor(this.root.ownerDocument);
+                const restoreCursor = shouldPreserveCursor(node, this.root) && preserveCursor(this.root.ownerDocument);
+                const shouldAdaptAnchor = anchor === node && selection.anchorOffset > node.textContent.indexOf('\u200B');
+                const shouldAdaptFocus = selection.focusNode === node && selection.focusOffset > node.textContent.indexOf('\u200B');
                 node.textContent = node.textContent.replace('\u200B', '');
                 node.parentElement.removeAttribute("data-oe-zws-empty-inline");
                 if (restoreCursor) {
                     restoreCursor();
+                }
+                if (shouldAdaptAnchor || shouldAdaptFocus) {
+                    setSelection(
+                        selection.anchorNode, shouldAdaptAnchor ? selection.anchorOffset - 1 : selection.anchorOffset,
+                        selection.focusNode, shouldAdaptFocus ? selection.focusOffset - 1 : selection.focusOffset,
+                    );
                 }
             }
 
             // Remove empty blocks in <li>
             if (
                 node.nodeName === 'P' &&
-                node.parentElement.tagName === 'LI'
+                node.parentElement.tagName === 'LI' &&
+                !node.parentElement.classList.contains('nav-item')
             ) {
+                const previous = node.previousSibling;
+                const attributes = node.attributes;
                 const parent = node.parentElement;
-                const restoreCursor = node.isConnected &&
-                    preserveCursor(this.root.ownerDocument);
-                if (isEmptyBlock(node)) {
-                    node.remove();
+                const restoreCursor = shouldPreserveCursor(node, this.root) && preserveCursor(this.root.ownerDocument);
+                if (attributes.length) {
+                    const spanEl = document.createElement('span');
+                    for (const attribute of attributes) {
+                        spanEl.setAttribute(attribute.name, attribute.value);
+                    }
+                    if (spanEl.style.textAlign) {
+                        // This is a tradeoff. Ideally, the state of the html
+                        // after this function should be reachable by standard
+                        // edition means and a span with display block is not.
+                        // However, this is required in order to not break the
+                        // design of already existing snippets.
+                        spanEl.style.display = 'block';
+                    }
+                    spanEl.append(...node.childNodes);
+                    node.replaceWith(spanEl);
                 } else {
                     unwrapContents(node);
                 }
-                node.remove();
-                fillEmpty(parent);
+                if (previous && isVisible(previous) && !isBlock(previous) && previous.nodeName !== 'BR') {
+                    const br = document.createElement('br');
+                    previous.after(br);
+                }
                 if (restoreCursor) {
                     restoreCursor(new Map([[node, parent]]));
                 }
+                node = parent;
             }
 
             // Transform <li> into <p> if they are not in a <ul> / <ol>
@@ -244,6 +284,23 @@ class Sanitize {
                 paragraph.replaceChildren(...node.childNodes);
                 node.replaceWith(paragraph);
                 node = paragraph;
+            }
+
+            // If node is UL or OL and its parent is UL or OL, nest it in an LI
+            // with class 'oe-nested'.
+            if (
+                ['UL', 'OL'].includes(node.nodeName) &&
+                ['UL', 'OL'].includes(node.parentNode.nodeName)
+            ) {
+                const restoreCursor = shouldPreserveCursor(node, this.root) && preserveCursor(this.root.ownerDocument);
+                const li = document.createElement('li');
+                node.parentNode.insertBefore(li, node);
+                li.appendChild(node);
+                li.classList.add('oe-nested');
+                node = li;
+                if (restoreCursor) {
+                    restoreCursor();
+                }
             }
 
             // Ensure a zero width space is present inside the FA element.
@@ -284,16 +341,72 @@ class Sanitize {
                 node.setAttribute('contenteditable', 'false');
             }
 
-            if (node.firstChild) {
-                this._parse(node.firstChild);
+            // Remove empty class/style attributes.
+            for (const attributeName of ['class', 'style']) {
+                if (node.nodeType === Node.ELEMENT_NODE && node.hasAttribute(attributeName) && !node.getAttribute(attributeName)) {
+                    node.removeAttribute(attributeName);
+                }
+            }
+
+            let firstChild = node.firstChild;
+            // Unwrap the contents of SPAN and FONT elements without attributes.
+            if (
+                ['SPAN', 'FONT'].includes(node.nodeName)
+                && !node.hasAttributes()
+                && !hasPseudoElementContent(node, "::before")
+                && !hasPseudoElementContent(node, "::after")
+            ) {
+                getDeepRange(this.root, { select: true });
+                const restoreCursor = shouldPreserveCursor(node, this.root) && preserveCursor(this.root.ownerDocument);
+                firstChild = unwrapContents(node)[0];
+                if (restoreCursor) {
+                    restoreCursor();
+                }
+            }
+
+            if (firstChild) {
+                this._parse(firstChild);
+            }
+
+            // Remove link ZWNBSP not in selection
+            const editable = closestElement(this.root, '[contenteditable=true]');
+            if (
+                node.nodeType === Node.TEXT_NODE &&
+                node.textContent.includes('\uFEFF') &&
+                !closestElement(node, 'a') &&
+                !(editable && getTraversedNodes(editable).includes(node))
+            ) {
+                const startsWithLegitZws = node.textContent.startsWith('\uFEFF') && node.previousSibling && node.previousSibling.nodeName === 'A';
+                const endsWithLegitZws = node.textContent.endsWith('\uFEFF') && node.nextSibling && node.nextSibling.nodeName === 'A';
+                let newText = node.textContent.replace(/\uFEFF/g, '');
+                if (startsWithLegitZws) {
+                    newText = '\uFEFF' + newText;
+                }
+                if (endsWithLegitZws) {
+                    newText = newText + '\uFEFF';
+                }
+                if (newText !== node.textContent) {
+                    // We replace the text node with a new text node with the
+                    // update text rather than just changing the text content of
+                    // the node because these two methods create different
+                    // mutations and at least the tour system breaks if all we
+                    // send here is a text content change.
+                    const newTextNode = document.createTextNode(newText);
+                    node.before(newTextNode);
+                    node.remove();
+                    node = newTextNode;
+                }
             }
 
             // Update link URL if label is a new valid link.
-            if (node.nodeName === 'A' && anchorEl === node) {
-                const url = deduceURLfromLabel(node);
-                if (url) {
-                    node.setAttribute('href', url);
+            if (node.nodeName === 'A') {
+                if (anchorEl === node) {
+                    const url = deduceURLfromLabel(node);
+                    if (url) {
+                        node.setAttribute('href', url);
+                    }
                 }
+                padLinkWithZws(this.root, node);
             }
             node = node.nextSibling;
         }

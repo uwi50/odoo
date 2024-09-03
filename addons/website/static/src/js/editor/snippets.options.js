@@ -13,6 +13,7 @@ const wUtils = require('website.utils');
 const {isImageSupportedForStyle} = require('web_editor.image_processing');
 require('website.s_popup_options');
 const {Domain} = require('@web/core/domain');
+const {SIZES, MEDIAS_BREAKPOINTS} = require('@web/core/ui/ui_service');
 
 var _t = core._t;
 var qweb = core.qweb;
@@ -625,6 +626,7 @@ options.userValueWidgetsRegistry['we-gpspicker'] = GPSPicker;
 options.Class.include({
     custom_events: _.extend({}, options.Class.prototype.custom_events || {}, {
         'google_fonts_custo_request': '_onGoogleFontsCustoRequest',
+        'request_save': '_onSaveRequest',
     }),
     specialCheckAndReloadMethodsNames: ['customizeWebsiteViews', 'customizeWebsiteVariable', 'customizeWebsiteColor'],
 
@@ -686,28 +688,10 @@ options.Class.include({
         }
         for (const widget of widgets) {
             const methodsNames = widget.getMethodsNames();
-            const specialMethodsNames = [];
-            // If it's a pageOption, it's most likely to need to reload, so check the widgets.
-            if (this.data.pageOptions) {
-                specialMethodsNames.push(methodsNames);
-            } else {
-                for (const methodName of methodsNames) {
-                    if (this.specialCheckAndReloadMethodsNames.includes(methodName)) {
-                        specialMethodsNames.push(methodName);
-                    }
-                }
-            }
-            if (!specialMethodsNames.length) {
-                continue;
-            }
-            let paramsReload = false;
-            for (const methodName of specialMethodsNames) {
-                if (widget.getMethodsParams(methodName).reload) {
-                    paramsReload = true;
-                    break;
-                }
-            }
-            if (paramsReload) {
+            const methodNamesToCheck = this.data.pageOptions
+                ? methodsNames
+                : methodsNames.filter(m => this.specialCheckAndReloadMethodsNames.includes(m));
+            if (methodNamesToCheck.some(m => widget.getMethodsParams(m).reload)) {
                 return true;
             }
         }
@@ -962,6 +946,22 @@ options.Class.include({
             reloadEditor: true,
         });
     },
+    /**
+     * This handler prevents reloading the page twice with a `request_save`
+     * event when a widget is already going to handle reloading the page.
+     *
+     * @param {OdooEvent} ev
+     */
+    _onSaveRequest(ev) {
+        // If a widget requires a reload, any subsequent request to save is
+        // useless, as the reload will save the page anyway. It can cause
+        // a race condition where the wysiwyg attempts to reload the page twice,
+        // so ignore the request.
+        if (this.__willReload) {
+            ev.stopPropagation();
+            return;
+        }
+    }
 });
 
 function _getLastPreFilterLayerElement($el) {
@@ -1756,25 +1756,9 @@ options.registry.Carousel = options.Class.extend({
         // the slide overlay) + See "CarouselItem" option.
         this.$controls.addClass('o_we_no_overlay');
 
-        let _slideTimestamp;
-        this.$bsTarget.on('slide.bs.carousel.carousel_option', () => {
-            _slideTimestamp = window.performance.now();
-            setTimeout(() => this.trigger_up('hide_overlay'));
-        });
-        this.$bsTarget.on('slid.bs.carousel.carousel_option', () => {
-            // slid.bs.carousel is most of the time fired too soon by bootstrap
-            // since it emulates the transitionEnd with a setTimeout. We wait
-            // here an extra 20% of the time before retargeting edition, which
-            // should be enough...
-            const _slideDuration = (window.performance.now() - _slideTimestamp);
-            setTimeout(() => {
-                this.trigger_up('activate_snippet', {
-                    $snippet: this.$target.find('.carousel-item.active'),
-                    ifInactiveOptions: true,
-                });
-                this.$bsTarget.trigger('active_slide_targeted');
-            }, 0.2 * _slideDuration);
-        });
+        // Handle the sliding manually.
+        this.__onControlClick = _.throttle(this._onControlClick.bind(this), 1000);
+        this.$controls.on("click.carousel_option", this.__onControlClick);
 
         return this._super.apply(this, arguments);
     },
@@ -1784,6 +1768,7 @@ options.registry.Carousel = options.Class.extend({
     destroy: function () {
         this._super.apply(this, arguments);
         this.$bsTarget.off('.carousel_option');
+        this.$controls.off(".carousel_option");
     },
     /**
      * @override
@@ -1800,18 +1785,12 @@ options.registry.Carousel = options.Class.extend({
     /**
      * @override
      */
-    cleanForSave: function () {
-        const $items = this.$target.find('.carousel-item');
-        $items.removeClass('next prev left right active').first().addClass('active');
-        this.$indicators.find('li').removeClass('active').empty().first().addClass('active');
-    },
-    /**
-     * @override
-     */
-    notify: function (name, data) {
+    notify(name, data) {
         this._super(...arguments);
         if (name === 'add_slide') {
-            this._addSlide();
+            this._addSlide().then(data.onSuccess);
+        } else if (name === "slide") {
+            this._slide(data.direction).then(data.onSuccess);
         }
     },
 
@@ -1823,7 +1802,7 @@ options.registry.Carousel = options.Class.extend({
      * @see this.selectClass for parameters
      */
     addSlide(previewMode, widgetValue, params) {
-        this._addSlide();
+        return this._addSlide();
     },
 
     //--------------------------------------------------------------------------
@@ -1854,20 +1833,105 @@ options.registry.Carousel = options.Class.extend({
      *
      * @private
      */
-    _addSlide() {
+    async _addSlide() {
+        this.options.wysiwyg.odooEditor.historyPauseSteps();
         const $items = this.$target.find('.carousel-item');
         this.$controls.removeClass('d-none');
         const $active = $items.filter('.active');
         this.$indicators.append($('<li>', {
             'data-bs-target': '#' + this.$target.attr('id'),
-            'data-bs-slide-to': $items.length,
         }));
         this.$indicators.append(' ');
         // Need to remove editor data from the clone so it gets its own.
         $active.clone(false)
             .removeClass('active')
             .insertAfter($active);
-        this.$bsTarget.carousel('next');
+        await this._slide("next");
+        this.options.wysiwyg.odooEditor.historyUnpauseSteps();
+    },
+    /**
+     * Slides the carousel in the given direction.
+     *
+     * @private
+     * @param {String|Number} direction the direction in which to slide:
+     *     - "prev": the previous slide;
+     *     - "next": the next slide;
+     *     - number: a slide number.
+     * @returns {Promise}
+     */
+    _slide(direction) {
+        this.trigger_up("disable_loading_effect");
+        let _slideTimestamp;
+        this.$bsTarget.one("slide.bs.carousel", () => {
+            _slideTimestamp = window.performance.now();
+            setTimeout(() => this.trigger_up('hide_overlay'));
+        });
+
+        return new Promise(resolve => {
+            this.$bsTarget.one("slid.bs.carousel", () => {
+                // slid.bs.carousel is most of the time fired too soon by bootstrap
+                // since it emulates the transitionEnd with a setTimeout. We wait
+                // here an extra 20% of the time before retargeting edition, which
+                // should be enough...
+                const _slideDuration = (window.performance.now() - _slideTimestamp);
+                setTimeout(() => {
+                    // Setting the active indicator manually, as Bootstrap could
+                    // not do it because the `data-bs-slide-to` attribute is not
+                    // here in edit mode anymore.
+                    const $activeSlide = this.$target.find(".carousel-item.active");
+                    const activeIndex = [...$activeSlide[0].parentElement.children].indexOf($activeSlide[0]);
+                    const activeIndicatorEl = [...this.$indicators[0].children][activeIndex];
+                    activeIndicatorEl.classList.add("active");
+                    activeIndicatorEl.setAttribute("aria-current", "true");
+
+                    this.trigger_up("activate_snippet", {
+                        $snippet: $activeSlide,
+                        ifInactiveOptions: true,
+                    });
+                    this.$bsTarget.trigger("active_slide_targeted"); // TODO remove in master: kept for compatibility.
+                    this.trigger_up("enable_loading_effect");
+                    resolve();
+                }, 0.2 * _slideDuration);
+            });
+
+            this.$bsTarget.carousel(direction);
+        });
+    },
+
+    //--------------------------------------------------------------------------
+    // Handlers
+    //--------------------------------------------------------------------------
+
+    /**
+     * Slides the carousel when clicking on the carousel controls. This handler
+     * allows to put the sliding in the mutex, to avoid race conditions.
+     *
+     * @private
+     * @param {Event} ev
+     */
+    _onControlClick(ev) {
+        this.options.wysiwyg.odooEditor.historyPauseSteps();
+        // Compute to which slide the carousel will slide.
+        const controlEl = ev.currentTarget;
+        let direction;
+        if (controlEl.classList.contains("carousel-control-prev")) {
+            direction = "prev";
+        } else if (controlEl.classList.contains("carousel-control-next")) {
+            direction = "next";
+        } else {
+            const indicatorEl = ev.target;
+            if (!indicatorEl.matches("li") || indicatorEl.classList.contains("active")) {
+                return;
+            }
+            direction = [...controlEl.children].indexOf(indicatorEl);
+        }
+
+        // Slide the carousel.
+        this.trigger_up("snippet_edition_request", {exec: async () => {
+            await this._slide(direction);
+            this.options.wysiwyg.odooEditor.historyUnpauseSteps();
+            this.options.wysiwyg.odooEditor.historyStep();
+        }});
     },
 });
 
@@ -1880,6 +1944,7 @@ options.registry.CarouselItem = options.Class.extend({
      */
     start: function () {
         this.$carousel = this.$bsTarget.closest('.carousel');
+        this.$targetCarousel = this.$target.closest(".carousel");
         this.$indicators = this.$carousel.find('.carousel-indicators');
         this.$controls = this.$carousel.find('.carousel-control-prev, .carousel-control-next, .carousel-indicators');
 
@@ -1894,6 +1959,14 @@ options.registry.CarouselItem = options.Class.extend({
      * @override
      */
     destroy: function () {
+        // Activate the active slide after removing a slide.
+        if (this.hasRemovedSlide) {
+            this.trigger_up("activate_snippet", {
+                $snippet: this.$targetCarousel.find(".carousel-item.active"),
+                ifInactiveOptions: true,
+            });
+            this.hasRemovedSlide = false;
+        }
         this._super(...arguments);
         this.$carousel.off('.carousel_item_option');
     },
@@ -1923,9 +1996,14 @@ options.registry.CarouselItem = options.Class.extend({
      * @see this.selectClass for parameters
      */
     addSlideItem(previewMode, widgetValue, params) {
-        this.trigger_up('option_update', {
-            optionName: 'Carousel',
-            name: 'add_slide',
+        return new Promise(resolve => {
+            this.trigger_up("option_update", {
+                optionName: "Carousel",
+                name: "add_slide",
+                data: {
+                    onSuccess: () => resolve(),
+                },
+            });
         });
     },
     /**
@@ -1933,43 +2011,56 @@ options.registry.CarouselItem = options.Class.extend({
      *
      * @see this.selectClass for parameters.
      */
-    removeSlide: function (previewMode) {
+    async removeSlide(previewMode) {
+        this.options.wysiwyg.odooEditor.historyPauseSteps();
         const $items = this.$carousel.find('.carousel-item');
         const newLength = $items.length - 1;
         if (!this.removing && newLength > 0) {
             // The active indicator is deleted to ensure that the other
             // indicators will still work after the deletion.
             const $toDelete = $items.filter('.active').add(this.$indicators.find('.active'));
-            this.$carousel.one('active_slide_targeted.carousel_item_option', () => {
-                $toDelete.remove();
-                // To ensure the proper functioning of the indicators, their
-                // attributes must reflect the position of the slides.
-                const indicatorsEls = this.$indicators[0].querySelectorAll('li');
-                for (let i = 0; i < indicatorsEls.length; i++) {
-                    indicatorsEls[i].setAttribute('data-bs-slide-to', i);
-                }
-                this.$controls.toggleClass('d-none', newLength === 1);
-                this.$carousel.trigger('content_changed');
-                this.removing = false;
+            this.removing = true; // TODO remove in master: kept for stable.
+            // Go to the previous slide.
+            await new Promise(resolve => {
+                this.trigger_up("option_update", {
+                    optionName: "Carousel",
+                    name: "slide",
+                    data: {
+                        direction: "prev",
+                        onSuccess: () => resolve(),
+                    },
+                });
             });
-            this.removing = true;
-            this.$carousel.carousel('prev');
+            // Remove the slide.
+            $toDelete.remove();
+            this.$controls.toggleClass("d-none", newLength === 1);
+            this.$carousel.trigger("content_changed");
+            this.removing = false;
         }
+        this.options.wysiwyg.odooEditor.historyUnpauseSteps();
+        this.hasRemovedSlide = true;
     },
     /**
      * Goes to next slide or previous slide.
      *
      * @see this.selectClass for parameters
      */
-    switchToSlide: function (previewMode, widgetValue, params) {
-        switch (widgetValue) {
-            case 'left':
-                this.$controls.filter('.carousel-control-prev')[0].click();
-                break;
-            case 'right':
-                this.$controls.filter('.carousel-control-next')[0].click();
-                break;
-        }
+    switchToSlide(previewMode, widgetValue, params) {
+        this.options.wysiwyg.odooEditor.historyPauseSteps();
+        const direction = widgetValue === "left" ? "prev" : "next";
+        return new Promise(resolve => {
+            this.trigger_up("option_update", {
+                optionName: "Carousel",
+                name: "slide",
+                data: {
+                    direction: direction,
+                    onSuccess: () => {
+                        this.options.wysiwyg.odooEditor.historyUnpauseSteps();
+                        resolve();
+                    },
+                },
+            });
+        });
     },
 });
 
@@ -2244,26 +2335,7 @@ options.registry.WebsiteLevelColor = options.Class.extend({
 });
 
 options.registry.HeaderLayout = options.registry.WebsiteLevelColor.extend({
-    /**
-     * @overide
-     */
-    async customizeWebsiteViews(previewMode, widgetValue, params) {
-        const _super = this._super.bind(this);
-
-        if (params.name === 'header_sidebar_opt') {
-            // When the user selects sidebar as header, make sure that the
-            // header position is regular.
-            await new Promise(resolve => {
-                this.trigger_up('action_demand', {
-                    actionName: 'toggle_page_option',
-                    params: [{name: 'header_overlay', value: false}],
-                    onSuccess: () => resolve(),
-                });
-            });
-        }
-
-        return _super(...arguments);
-    }
+    // TODO: to remove in master, it is only kept for the stable versions.
 });
 
 options.registry.HeaderNavbar = options.Class.extend({
@@ -2624,8 +2696,13 @@ options.registry.DeviceVisibility = options.Class.extend({
      * @override
      */
     async onTargetShow() {
-        if (this.$target[0].classList.contains('o_snippet_mobile_invisible')
-                || this.$target[0].classList.contains('o_snippet_desktop_invisible')) {
+        // TODO In future version use tool method to determine isMobilePreview.
+        const mobileViewThreshold = MEDIAS_BREAKPOINTS[SIZES.LG].minWidth;
+        const isMobilePreview = this.$target[0].ownerDocument.defaultView.frameElement.clientWidth < mobileViewThreshold;
+        const isMobileHidden = this.$target[0].classList.contains("o_snippet_mobile_invisible");
+        if ((this.$target[0].classList.contains('o_snippet_mobile_invisible')
+                || this.$target[0].classList.contains('o_snippet_desktop_invisible')
+            ) && isMobilePreview === isMobileHidden) {
             this.$target[0].classList.add('o_snippet_override_invisible');
         }
     },
@@ -2734,7 +2811,7 @@ options.registry.anchor = options.Class.extend({
                     return;
                 }
 
-                const alreadyExists = !!document.getElementById(anchorName);
+                const alreadyExists = !!self.ownerDocument.getElementById(anchorName);
                 this.$('.o_anchor_already_exists').toggleClass('d-none', !alreadyExists);
                 $input.toggleClass('is-invalid', alreadyExists);
                 if (!alreadyExists) {
@@ -2793,7 +2870,7 @@ options.registry.anchor = options.Class.extend({
             const title = $titles.length > 0 ? $titles[0].innerText : this.data.snippetName;
             const anchorName = this._text2Anchor(title);
             let n = '';
-            while (document.getElementById(anchorName + n)) {
+            while (this.ownerDocument.getElementById(anchorName + n)) {
                 n = (n || 1) + 1;
             }
             this._setAnchorName(anchorName + n);
@@ -3436,6 +3513,7 @@ options.registry.WebsiteAnimate = options.Class.extend({
         this.isAnimatedText = this.$target.hasClass('o_animated_text');
         this.$optionsSection = this.$overlay.data('$optionsSection');
         this.$scrollingElement = $().getScrollingElement(this.ownerDocument);
+        this.$overlay[0].querySelector(".o_handles").classList.toggle("pe-none", this.isAnimatedText);
     },
     /**
      * @override
@@ -3715,7 +3793,7 @@ options.registry.MegaMenuLayout = options.registry.SelectTemplate.extend({
 });
 
 /**
- * Hides delete button for Mega Menu block.
+ * Hides delete and clone buttons for Mega Menu block.
  */
 options.registry.MegaMenuNoDelete = options.Class.extend({
     forceNoDeleteButton: true,
@@ -3839,11 +3917,7 @@ options.registry.GridImage = options.Class.extend({
      * @returns {?HTMLElement}
      */
     _getImageGridItem() {
-        const parentEl = this.$target[0].parentNode;
-        if (parentEl && parentEl.classList.contains('o_grid_item_image')) {
-            return parentEl;
-        }
-        return null;
+        return this.$target[0].closest(".o_grid_item_image");
     },
     /**
      * @override

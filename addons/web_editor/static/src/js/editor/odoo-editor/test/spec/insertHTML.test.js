@@ -4,6 +4,7 @@ import { BasicEditor, testEditor, unformat, insertText, deleteBackward } from '.
 const span = text => {
     const span = document.createElement('span');
     span.innerText = text;
+    span.classList.add('a');
     return span;
 }
 
@@ -16,8 +17,8 @@ describe('insert HTML', () => {
                     await editor.execCommand('insert', parseHTML('<i class="fa fa-pastafarianism"></i>'));
                 },
                 contentAfterEdit:
-                    '<p><i class="fa fa-pastafarianism" contenteditable="false">\u200b</i>[]<br></p>',
-                contentAfter: '<p><i class="fa fa-pastafarianism"></i>[]<br></p>',
+                    '<p><i class="fa fa-pastafarianism" contenteditable="false">\u200b</i>[]</p>',
+                contentAfter: '<p><i class="fa fa-pastafarianism"></i>[]</p>',
             });
         });
         it('should insert html between two letters', async () => {
@@ -78,6 +79,38 @@ describe('insert HTML', () => {
                 contentAfter: '<p>contentunwrapped</p><div><i class="fa fa-circle-o-notch"></i></div><p>culprit</p><p>after[]</p>',
             });
         });
+        it('should not remove the trailing <br> when pasting content ending with a <br>', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>[]<br></p>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insert', parseHTML('<p>abc<br></p>'));
+                },
+                contentAfter: '<p>abc<br>[]<br></p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>ab[]cd</p>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insert', parseHTML('<p>efg<br></p>'));
+                },
+                contentAfter: '<p>abefg<br>[]cd</p>',
+            });
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>[]<br></p>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insert', parseHTML('<p><br><br><br></p>'));
+                },
+                contentAfter: '<p><br><br><br>[]<br></p>',
+            });
+        });
+        it('should paste an "empty" block', async () => {
+            await testEditor(BasicEditor, {
+                contentBefore: '<p>abcd[]</p>',
+                stepFunction: async editor => {
+                    await editor.execCommand('insert', parseHTML('<p>efgh</p><p></p>'));
+                },
+                contentAfter: '<p>abcdefgh</p><p><br>[]</p>',
+            });
+        });
     });
     describe('not collapsed selection', () => {
         it('should delete selection and insert html in its place', async () => {
@@ -86,8 +119,8 @@ describe('insert HTML', () => {
                 stepFunction: async editor => {
                     await editor.execCommand('insert', parseHTML('<i class="fa fa-pastafarianism"></i>'));
                 },
-                contentAfterEdit: '<p><i class="fa fa-pastafarianism" contenteditable="false">\u200b</i>[]<br></p>',
-                contentAfter: '<p><i class="fa fa-pastafarianism"></i>[]<br></p>',
+                contentAfterEdit: '<p><i class="fa fa-pastafarianism" contenteditable="false">\u200b</i>[]</p>',
+                contentAfter: '<p><i class="fa fa-pastafarianism"></i>[]</p>',
             });
         });
         it('should delete selection and insert html in its place (2)', async () => {
@@ -112,7 +145,7 @@ describe('insert HTML', () => {
                     <p>k]l</p>`,
                 ),
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
-                contentAfter: '<p>a<span>TEST</span>[]l</p>',
+                contentAfter: '<p>a<span class="a">TEST</span>[]l</p>',
             });
         });
         it('should only remove the text content of cells in a partly selected table', async () => {
@@ -127,7 +160,7 @@ describe('insert HTML', () => {
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
                 contentAfter: unformat(
                     `<table><tbody>
-                        <tr><td>cd</td><td><span>TEST</span>[]<br></td><td>gh</td></tr>
+                        <tr><td>cd</td><td><span class="a">TEST</span>[]</td><td>gh</td></tr>
                         <tr><td>ij</td><td><br></td><td>mn</td></tr>
                         <tr><td>op</td><td>qr</td><td>st</td></tr>
                     </tbody></table>`,
@@ -146,7 +179,7 @@ describe('insert HTML', () => {
                 ),
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
                 contentAfter: unformat(
-                    `<p>a<span>TEST</span>[]</p>
+                    `<p>a<span class="a">TEST</span>[]</p>
                     <p>kl</p>`,
                 ),
             });
@@ -164,7 +197,7 @@ describe('insert HTML', () => {
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
                 contentAfter: unformat(
                     `<p>ab</p>
-                    <p><span>TEST</span>[]l</p>`,
+                    <p><span class="a">TEST</span>[]l</p>`,
                 ),
             });
         });
@@ -179,7 +212,7 @@ describe('insert HTML', () => {
                     <p>k]l</p>`,
                 ),
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
-                contentAfter: `<p>a<span>TEST</span>[]l</p>`,
+                contentAfter: `<p>a<span class="a">TEST</span>[]l</p>`,
             });
         });
         it('should remove a selection of several tables', async () => {
@@ -199,7 +232,7 @@ describe('insert HTML', () => {
                     </tbody></table>`,
                 ),
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
-                contentAfter: `<p><span>TEST</span>[]<br></p>`,
+                contentAfter: `<p><span class="a">TEST</span>[]</p>`,
             });
         });
         it('should remove a selection including several tables', async () => {
@@ -223,7 +256,7 @@ describe('insert HTML', () => {
                     <p>67]</p>`,
                 ),
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
-                contentAfter: `<p>0<span>TEST</span>[]</p>`,
+                contentAfter: `<p>0<span class="a">TEST</span>[]</p>`,
             });
         });
         it('should remove everything, including several tables', async () => {
@@ -247,7 +280,7 @@ describe('insert HTML', () => {
                     <p>67]</p>`,
                 ),
                 stepFunction: editor => editor.execCommand('insert', span('TEST')),
-                contentAfter: `<p><span>TEST</span>[]<br></p>`,
+                contentAfter: `<p><span class="a">TEST</span>[]</p>`,
             });
         });
     });

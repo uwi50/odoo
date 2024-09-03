@@ -50,7 +50,11 @@ class RecruitmentSource(models.Model):
                     'source_id': source.source_id.id,
                 },
             }
-            source.alias_id = self.env['mail.alias'].create(vals)
+
+            # check that you can create source before to call mail.alias in sudo with known/controlled vals
+            source.check_access_rights('create')
+            source.check_access_rule('create')
+            source.alias_id = self.env['mail.alias'].sudo().create(vals)
 
     @api.model
     def _get_view(self, view_id=None, view_type='form', **options):
@@ -144,7 +148,7 @@ class Applicant(models.Model):
     user_id = fields.Many2one(
         'res.users', "Recruiter", compute='_compute_user', domain="[('share', '=', False), ('company_ids', 'in', company_id)]",
         tracking=True, store=True, readonly=False)
-    date_closed = fields.Datetime("Hire Date", compute='_compute_date_closed', store=True, readonly=False, tracking=True)
+    date_closed = fields.Datetime("Hire Date", compute='_compute_date_closed', store=True, readonly=False, tracking=True, copy=False)
     date_open = fields.Datetime("Assigned", readonly=True)
     date_last_stage_update = fields.Datetime("Last Stage Update", index=True, default=fields.Datetime.now)
     priority = fields.Selection(AVAILABLE_PRIORITIES, "Evaluation", default='0')
@@ -509,7 +513,7 @@ class Applicant(models.Model):
             'res_model': 'ir.attachment',
             'name': _('Documents'),
             'context': {
-                'default_res_model': 'hr.job',
+                'default_res_model': 'hr.applicant',
                 'default_res_id': self.ids[0],
                 'show_partner_name': 1,
             },
@@ -592,9 +596,9 @@ class Applicant(models.Model):
                 applicant._message_add_suggested_recipient(recipients, partner=applicant.partner_id.sudo(), reason=_('Contact'))
             elif applicant.email_from:
                 email_from = tools.email_normalize(applicant.email_from)
-                if applicant.partner_name:
+                if email_from and applicant.partner_name:
                     email_from = tools.formataddr((applicant.partner_name, email_from))
-                applicant._message_add_suggested_recipient(recipients, email=email_from, reason=_('Contact Email'))
+                    applicant._message_add_suggested_recipient(recipients, email=email_from, reason=_('Contact Email'))
         return recipients
 
     def name_get(self):

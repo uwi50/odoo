@@ -300,9 +300,9 @@ class Project(models.Model):
         } for sol_read in sols.with_context(with_price_unit=True).read(['display_name', 'product_uom_qty', 'qty_delivered', 'qty_invoiced', 'product_uom'])]
 
     def _get_sale_items_domain(self, additional_domain=None):
-        sale_items = self._get_sale_order_items()
+        sale_items = self.sudo()._get_sale_order_items()
         domain = [
-            ('order_id', 'in', sale_items.order_id.ids),
+            ('order_id', 'in', sale_items.sudo().order_id.ids),
             ('is_downpayment', '=', False),
             ('state', 'in', ['sale', 'done']),
             ('display_type', '=', False),
@@ -317,7 +317,7 @@ class Project(models.Model):
         return domain
 
     def _get_sale_items(self, with_action=True):
-        domain = self.sudo()._get_sale_items_domain()
+        domain = self._get_sale_items_domain()
         return {
             'total': self.env['sale.order.line'].sudo().search_count(domain),
             'data': self.get_sale_items_data(domain, limit=5, with_action=with_action),
@@ -541,7 +541,7 @@ class Project(models.Model):
         revenue_items_from_invoices = self._get_revenues_items_from_invoices(
             excluded_move_line_ids=self.env['sale.order.line'].browse(
                 [sol_id for sol_read in sale_line_read_group for sol_id in sol_read['ids']]
-            ).invoice_lines.ids
+            ).sudo().invoice_lines.ids
         )
         revenues['data'] += revenue_items_from_invoices['data']
         revenues['total']['to_invoice'] += revenue_items_from_invoices['total']['to_invoice']

@@ -2,6 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from datetime import date
+import calendar
 from dateutil.relativedelta import relativedelta
 
 from odoo import models, api, _
@@ -24,7 +25,8 @@ class AccountMove(models.Model):
             fiscal_month = int(company.fiscalyear_last_month)
             if not (fiscal_day == 31 and fiscal_month == 12):
                 year += 1
-            current = date(year, fiscal_month, fiscal_day)
+            max_day = calendar.monthrange(year, fiscal_month)[1]
+            current = date(year, fiscal_month, min(fiscal_day, max_day))
             start, end = date_utils.get_fiscal_year(current, fiscal_day, fiscal_month)
         elif period_type == "month":
             start = date(year, month, 1)
@@ -111,7 +113,7 @@ class AccountMove(models.Model):
             company_id = args["company_id"] or self.env.company.id
             domain = self._build_spreadsheet_formula_domain(args)
             # remove this when _search always returns a Query object
-            if domain == expression.FALSE_DOMAIN:
+            if expression.is_false(self.env["account.move.line"], domain):
                 results.append({"credit": 0, "debit": 0})
                 continue
             MoveLines = self.env["account.move.line"].with_company(company_id)

@@ -219,14 +219,16 @@ class IrBinary(models.AbstractModel):
 
         if stream.type == 'url':
             return stream  # Rezising an external URL is not supported
-
-        stream.etag += f'-{width}x{height}-crop={crop}-quality={quality}'
+        if not stream.mimetype.startswith('image/'):
+            stream.mimetype = 'application/octet-stream'
+        if isinstance(stream.etag, str):
+            stream.etag += f'-{width}x{height}-crop={crop}-quality={quality}'
 
         if isinstance(stream.last_modified, (int, float)):
-            stream.last_modified = datetime.utcfromtimestamp(stream.last_modified)
+            stream.last_modified = datetime.fromtimestamp(stream.last_modified, tz=None)
         modified = werkzeug.http.is_resource_modified(
             request.httprequest.environ,
-            etag=stream.etag,
+            etag=stream.etag if isinstance(stream.etag, str) else None,
             last_modified=stream.last_modified
         )
 

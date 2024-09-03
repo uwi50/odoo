@@ -8,15 +8,15 @@
 # Thomas, 2023
 # Michael Hofer, 2023
 # Martin Trigaux, 2023
-# Larissa Manderfeld, 2023
+# Larissa Manderfeld, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-23 08:23+0000\n"
+"POT-Creation-Date: 2024-02-06 13:32+0000\n"
 "PO-Revision-Date: 2022-09-22 05:54+0000\n"
-"Last-Translator: Larissa Manderfeld, 2023\n"
+"Last-Translator: Larissa Manderfeld, 2024\n"
 "Language-Team: German (https://app.transifex.com/odoo/teams/41243/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -506,7 +506,7 @@ msgid ""
 msgstr ""
 "<div style=\"margin: 0px; padding: 0px;\">\n"
 "    <p style=\"margin: 0px; padding: 0px; font-size: 13px;\">\n"
-"        <t t-set=\"doc_name\" t-value=\"'quotation' if object.state in ('draft', 'sent') else 'order'\"></t>\n"
+"        <t t-set=\"doc_name\" t-value=\"'Angebot' if object.state in ('draft', 'sent') else 'Auftrag'\"></t>\n"
 "        Hallo,\n"
 "        <br><br>\n"
 "        Ihre\n"
@@ -614,6 +614,11 @@ msgstr "<i class=\"fa fa-fw fa-check\"/> <b>Autorisiert</b>"
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
 msgid "<i class=\"fa fa-fw fa-check\"/> <b>Paid</b>"
 msgstr "<i class=\"fa fa-fw fa-check\"/><b>Bezahlt</b>"
+
+#. module: sale
+#: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
+msgid "<i class=\"fa fa-fw fa-check\"/> <b>Reversed</b>"
+msgstr "<i class=\"fa fa-fw fa-check\"/> <b>Storniert</b>"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.sale_order_portal_content
@@ -1252,7 +1257,7 @@ msgstr "Kann Produkt bearbeiten"
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
 #: model_terms:ir.ui.view,arch_db:sale.view_sale_advance_payment_inv
 msgid "Cancel"
-msgstr "Abbrechen"
+msgstr "Stornieren"
 
 #. module: sale
 #. odoo-python
@@ -1653,7 +1658,7 @@ msgstr "Standard-Limit:"
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_res_config_settings__use_quotation_validity_days
 msgid "Default Quotation Validity"
-msgstr "Gültigkeit des Standardangebots"
+msgstr "Standardgültigkeit für Angebot"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_res_company__quotation_validity_days
@@ -2844,7 +2849,7 @@ msgstr "Online-Zahlung"
 #: model:ir.model.fields,field_description:sale.field_res_config_settings__portal_confirmation_sign
 #: model:ir.model.fields,field_description:sale.field_sale_order__require_signature
 msgid "Online Signature"
-msgstr "Online-Unterschrift"
+msgstr "Online-Signatur"
 
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.view_order_form
@@ -3433,7 +3438,7 @@ msgstr "Angebote und Verkäufe"
 #: model:ir.model.fields,field_description:sale.field_product_product__expense_policy
 #: model:ir.model.fields,field_description:sale.field_product_template__expense_policy
 msgid "Re-Invoice Expenses"
-msgstr "Auslagen weiterberechnen"
+msgstr "Spesen weiterberechnen"
 
 #. module: sale
 #: model:ir.model.fields,field_description:sale.field_product_product__visible_expense_policy
@@ -3500,7 +3505,7 @@ msgid ""
 "Request a online signature and/or payment to the customer in order to "
 "confirm orders automatically."
 msgstr ""
-"Benötigt eine Online-Unterschrift und/oder eine Zahlung des Kunden, um eine "
+"Benötigt eine Online-Signatur und/oder eine Zahlung des Kunden, um eine "
 "automatische Auftragsbestätigung umzusetzen."
 
 #. module: sale
@@ -3511,7 +3516,7 @@ msgstr "Bitten Sie um eine Online-Zahlung zur Bestätigung von Aufträgen"
 #. module: sale
 #: model_terms:ir.ui.view,arch_db:sale.res_config_settings_view_form
 msgid "Request an online signature to confirm orders"
-msgstr "Bitten Sie um eine Online-Unterschrift zur Bestätigung von Aufträgen"
+msgstr "Bitten Sie um eine Online-Signatur zur Bestätigung von Aufträgen"
 
 #. module: sale
 #. odoo-python

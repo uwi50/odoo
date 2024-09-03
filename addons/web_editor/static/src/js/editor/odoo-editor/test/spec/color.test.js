@@ -10,20 +10,20 @@ const setColor = (color, mode) => {
 describe('applyColor', () => {
     it('should apply a color to a slice of text in a span in a font', async () => {
         await testEditor(BasicEditor, {
-            contentBefore: '<p>a<font>b<span>c[def]g</span>h</font>i</p>',
+            contentBefore: '<p>a<font class="a">b<span class="b">c[def]g</span>h</font>i</p>',
             stepFunction: setColor('rgb(255, 0, 0)', 'color'),
-            contentAfter: '<p>a<font>b<span>c</span></font>' +
-                '<font style="color: rgb(255, 0, 0);"><span>[def]</span></font>' +
-                '<font><span>g</span>h</font>i</p>',
+            contentAfter: '<p>a<font class="a">b<span class="b">c</span></font>' +
+                '<font class="a" style="color: rgb(255, 0, 0);"><span class="b">[def]</span></font>' +
+                '<font class="a"><span class="b">g</span>h</font>i</p>',
         });
     });
     it('should apply a background color to a slice of text in a span in a font', async () => {
         await testEditor(BasicEditor, {
-            contentBefore: '<p>a<font>b<span>c[def]g</span>h</font>i</p>',
+            contentBefore: '<p>a<font class="a">b<span class="b">c[def]g</span>h</font>i</p>',
             stepFunction: setColor('rgb(255, 0, 0)', 'backgroundColor'),
-            contentAfter: '<p>a<font>b<span>c</span></font>' +
-                '<font style="background-color: rgb(255, 0, 0);"><span>[def]</span></font>' +
-                '<font><span>g</span>h</font>i</p>',
+            contentAfter: '<p>a<font class="a">b<span class="b">c</span></font>' +
+                '<font class="a" style="background-color: rgb(255, 0, 0);"><span class="b">[def]</span></font>' +
+                '<font class="a"><span class="b">g</span>h</font>i</p>',
         });
     });
     it('should get ready to type with a different color', async () => {
@@ -44,19 +44,19 @@ describe('applyColor', () => {
         await testEditor(BasicEditor, {
             contentBefore: '<p>[<br></p><p><br></p><p>]<br></p>',
             stepFunction: setColor('rgb(255, 0, 0)', 'color'),
-            contentAfterEdit: '<p><font data-oe-zws-empty-inline="" style="color: rgb(255, 0, 0);">[\u200B</font></p>' +
+            contentAfterEdit: '<p>[<font data-oe-zws-empty-inline="" style="color: rgb(255, 0, 0);">\u200B</font></p>' +
                               '<p><font data-oe-zws-empty-inline="" style="color: rgb(255, 0, 0);">\u200B</font></p>' +
-                              '<p><font data-oe-zws-empty-inline="" style="color: rgb(255, 0, 0);">]\u200B</font></p>',
+                              '<p>]<font data-oe-zws-empty-inline="" style="color: rgb(255, 0, 0);">\u200B</font></p>',
             contentAfter: '<p>[</p><p></p><p>]</p>',
         });
     });
     it('should apply a background color on empty selection', async () => {
         await testEditor(BasicEditor, {
             contentBefore: '<p>[<br></p><p><br></p><p>]<br></p>',
-            stepFunction: setColor('rgb(255, 0, 0)', 'background-color'),
-            contentAfterEdit: '<p><font data-oe-zws-empty-inline="" style="background-color: rgb(255, 0, 0);">[\u200B</font></p>' +
+            stepFunction: setColor('rgb(255, 0, 0)', 'backgroundColor'),
+            contentAfterEdit: '<p>[<font data-oe-zws-empty-inline="" style="background-color: rgb(255, 0, 0);">\u200B</font></p>' +
                               '<p><font data-oe-zws-empty-inline="" style="background-color: rgb(255, 0, 0);">\u200B</font></p>' +
-                              '<p><font data-oe-zws-empty-inline="" style="background-color: rgb(255, 0, 0);">]\u200B</font></p>',
+                              '<p>]<font data-oe-zws-empty-inline="" style="background-color: rgb(255, 0, 0);">\u200B</font></p>',
             contentAfter: '<p>[</p><p></p><p>]</p>',
         });
     });
@@ -91,16 +91,86 @@ describe('applyColor', () => {
         await testEditor(BasicEditor, {
             contentBefore: unformat(`
                 <table><tbody>
-                    <tr><td>[ab</td></tr>
-                    <tr><td contenteditable="false">cd]</td></tr>
+                    <tr><td class="o_selected_td">[ab</td></tr>
+                    <tr><td contenteditable="false" class="o_selected_td">cd</td></tr>
+                    <tr><td class="o_selected_td">ef]</td></tr>
                 </tbody></table>
             `),
-            stepFunction: setColor('rgb(255, 0, 0)', 'background-color'),
+            stepFunction: setColor('rgb(255, 0, 0)', 'backgroundColor'),
             contentAfter: unformat(`
                 <table><tbody>
                     <tr><td style="background-color: rgb(255, 0, 0);">[]ab</td></tr>
                     <tr><td contenteditable="false">cd</td></tr>
+                    <tr><td style="background-color: rgb(255, 0, 0);">ef</td></tr>
                 </tbody></table>
+            `),
+        });
+    });
+    it('should remove font tag after removing font color', async () => {
+        await testEditor(BasicEditor, {
+            contentBefore: '<p><font style="color: rgb(255, 0, 0);">[abcabc]</font></p>',
+            stepFunction: setColor('', 'color'),
+            contentAfter: '<p>[abcabc]</p>',
+        });
+        await testEditor(BasicEditor, {
+            contentBefore: '<p><font class="text-400">[abcabc]</font></p>',
+            stepFunction: setColor('', 'color'),
+            contentAfter: '<p>[abcabc]</p>',
+        });
+    });
+    it('should remove font tag after removing background color applied as style', async () => {
+        await testEditor(BasicEditor, {
+            contentBefore: '<p><font style="background-color: rgb(255, 0, 0);">[abcabc]</font></p>',
+            stepFunction: setColor('', 'backgroundColor'),
+            contentAfter: '<p>[abcabc]</p>',
+        });
+        await testEditor(BasicEditor, {
+            contentBefore: '<p><font class="bg-200">[abcabc]</font></p>',
+            stepFunction: setColor('', 'backgroundColor'),
+            contentAfter: '<p>[abcabc]</p>',
+        });
+    });
+    it('should remove font tag if font-color and background-color both are removed one by one', async () => {
+        await testEditor(BasicEditor, {
+            contentBefore: '<p><font style="color: rgb(255, 0, 0);" class="bg-200">[abcabc]</font></p>',
+            stepFunction: setColor('','backgroundColor'),
+            stepFunction: setColor('','color'),
+            contentAfter: '<p>[abcabc]</p>',
+        });
+        await testEditor(BasicEditor, {
+            contentBefore: '<p><font style="background-color: rgb(255, 0, 0);" class="text-900">[abcabc]</font></p>',
+            stepFunction: setColor('','color'),
+            stepFunction: setColor('','backgroundColor'),
+            contentAfter: '<p>[abcabc]</p>',
+        });
+    });
+    it('Shall not apply font tag to t nodes (protects if else nodes separation)', async () => {
+        await testEditor(BasicEditor, {
+            contentBefore: unformat(`[
+                <p>
+                    <t t-if="object.partner_id.parent_id">
+                       <t t-out="object.partner_id.parent_id.name or ''">Azure Interior</t>
+                    </t>
+                    <t t-else="">
+                        <t t-out="object.partner_id.name or ''">Brandon Freeman</t>,
+                    </t>
+                </p>
+            ]`),
+            stepFunction: setColor('red', 'backgroundColor'),
+            contentAfter: unformat(`
+                <p>
+                    <t t-if="object.partner_id.parent_id">
+                        <t t-out="object.partner_id.parent_id.name or ''">
+                            <font style="background-color: red;">[AzureInterior</font>
+                        </t>
+                    </t>
+                    <t t-else="">
+                        <t t-out="object.partner_id.name or ''">
+                            <font style="background-color: red;">BrandonFreeman</font>
+                        </t>
+                        <font style="background-color: red;">,]</font>
+                    </t>
+                </p>
             `),
         });
     });

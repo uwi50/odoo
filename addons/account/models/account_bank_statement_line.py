@@ -1,6 +1,7 @@
 from odoo import api, Command, fields, models, _
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import html2plaintext
+from odoo.tools.misc import str2bool
 
 from odoo.addons.base.models.res_bank import sanitize_account_number
 
@@ -45,6 +46,7 @@ class AccountBankStatementLine(models.Model):
         comodel_name='account.move',
         auto_join=True,
         string='Journal Entry', required=True, readonly=True, ondelete='cascade',
+        index=True,
         check_company=True)
     statement_id = fields.Many2one(
         comodel_name='account.bank.statement',
@@ -428,6 +430,9 @@ class AccountBankStatementLine(models.Model):
 
     def _find_or_create_bank_account(self):
         self.ensure_one()
+        if str2bool(self.env['ir.config_parameter'].sudo().get_param("account.skip_create_bank_account_on_reconcile")):
+            return self.env['res.partner.bank']
+
         # There is a sql constraint on res.partner.bank ensuring an unique pair <partner, account number>.
         # Since it's not dependent of the company, we need to search on others company too to avoid the creation
         # of an extra res.partner.bank raising an error coming from this constraint.
@@ -647,7 +652,7 @@ class AccountBankStatementLine(models.Model):
             account_number_nums = sanitize_account_number(self.account_number)
             if account_number_nums:
                 domain = [('sanitized_acc_number', 'ilike', account_number_nums)]
-                for extra_domain in ([('company_id', '=', self.company_id.id)], []):
+                for extra_domain in ([('company_id', '=', self.company_id.id)], [('company_id', '=', False)]):
                     bank_accounts = self.env['res.partner.bank'].search(extra_domain + domain)
                     if len(bank_accounts.partner_id) == 1:
                         return bank_accounts.partner_id
@@ -665,8 +670,9 @@ class AccountBankStatementLine(models.Model):
                 ],
             )
             for domain in domains:
-                partner = self.env['res.partner'].search(list(domain) + [('parent_id', '=', False)], limit=1)
-                if partner:
+                partner = self.env['res.partner'].search(list(domain) + [('parent_id', '=', False)], limit=2)
+                # Return the partner if there is only one with this name
+                if len(partner) == 1:
                     return partner
 
         # Retrieve the partner from the 'reconcile models'.
@@ -700,7 +706,7 @@ class AccountBankStatementLine(models.Model):
             else:
                 other_lines += line
         if not liquidity_lines:
-            liquidity_lines = self.move_id.line_ids.filtered(lambda l: l.account_id.account_type == 'asset_cash')
+            liquidity_lines = self.move_id.line_ids.filtered(lambda l: l.account_id.account_type in ('asset_cash', 'liability_credit_card'))
             other_lines -= liquidity_lines
         return liquidity_lines, suspense_lines, other_lines
 

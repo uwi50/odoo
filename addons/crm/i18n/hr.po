@@ -8,7 +8,6 @@
 # Ivan Marijanović <ivanm101@yahoo.com>, 2022
 # 0ba0ac30481a756f36528ba6f9a4317e_6443a87 <52eefe24349934c364624ef40611b7a3_1010754>, 2022
 # Stjepan Lovasić <stjepan.lovasic@gmail.com>, 2022
-# Vladimir Vrgoč, 2022
 # Karolina Tonković <karolina.tonkovic@storm.hr>, 2022
 # Đurđica Žarković <durdica.zarkovic@storm.hr>, 2022
 # Milan Tribuson <one.mile.code@gmail.com>, 2022
@@ -23,14 +22,18 @@
 # Bole <bole@dajmi5.com>, 2023
 # Marko Carević <marko.carevic@live.com>, 2023
 # Jan Carević, 2023
+# Matija Gudlin, 2023
+# Gordana Bilas, 2024
+# Vladimir Vrgoč, 2024
+# Luka Carević <luka@uvid.hr>, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-23 08:22+0000\n"
+"POT-Creation-Date: 2024-02-06 13:31+0000\n"
 "PO-Revision-Date: 2022-09-22 05:45+0000\n"
-"Last-Translator: Jan Carević, 2023\n"
+"Last-Translator: Luka Carević <luka@uvid.hr>, 2024\n"
 "Language-Team: Croatian (https://app.transifex.com/odoo/teams/41243/hr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -274,7 +277,7 @@ msgstr "<span>Očekivani prihodi:</span>"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_merge_summary
 msgid "<span>Merged the Lead/Opportunity</span>"
-msgstr "<span>Spojio potencijal/priliku</span>"
+msgstr "<span>Spojen potencijal/prilika</span>"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
@@ -1103,7 +1106,7 @@ msgstr "Kreiraj priliku"
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
 #, python-format
 msgid "Create an opportunity to start playing with your pipeline."
-msgstr ""
+msgstr "Stvorite priliku kako bi počeli."
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead2opportunity_partner__create_uid
@@ -1231,7 +1234,7 @@ msgstr "Zadane vrijednosti"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Define recurring plans and revenues on Opportunities"
-msgstr "Definirajte ponavljajuće planove i prihode na Prilikama"
+msgstr "Definirajte ponavljajuće planove i prihode na prilikama"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_case_kanban_view_leads
@@ -1583,13 +1586,13 @@ msgstr "Buduće aktivnosti"
 #: model:ir.model.fields,field_description:crm.field_res_config_settings__module_crm_iap_mine
 msgid "Generate new leads based on their country, industries, size, etc."
 msgstr ""
-"Generiraj nove potencijale temeljene na državama, idustriji, veličini..."
+"Generiraj nove potencijale temeljene na državama, idustriji, veličini i sl."
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "Generate new leads based on their country, industry, size, etc."
 msgstr ""
-"Generiraj nove potencijale temeljene na državama, idustriji, veličini..."
+"Generiraj nove potencijale temeljene na državama, idustriji, veličini i sl."
 
 #. module: crm
 #: model:ir.model,name:crm.model_crm_lead_lost
@@ -1795,7 +1798,7 @@ msgstr ""
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_stage__is_won
 msgid "Is Won Stage?"
-msgstr ""
+msgstr "Završna faza (dobiveno)?"
 
 #. module: crm
 #: model:ir.model.fields,field_description:crm.field_crm_lead__is_automated_probability
@@ -3389,7 +3392,7 @@ msgstr ""
 #: model:ir.model.fields,field_description:crm.field_crm_lead__state_id
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_view_form
 msgid "State"
-msgstr "Županija/fed.država"
+msgstr "Status"
 
 #. module: crm
 #: model:ir.model.fields,help:crm.field_crm_lead__activity_state
@@ -3534,7 +3537,7 @@ msgstr "Vjerojatnost sklapanja posla bi trebala biti između 0% i 100%!"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "The success rate is computed based on"
-msgstr ""
+msgstr "Stopa uspješnosti izračunava se na temelju"
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_lead_pls_update_view_form
@@ -3817,21 +3820,7 @@ msgstr ""
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
-msgid "Use the top left <i>Create</i> button, or send an email to"
-msgstr ""
-
-#. module: crm
-#: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
 msgid "Use the <i>New</i> button, or send an email to"
-msgstr ""
-
-#. module: crm
-#. odoo-python
-#: code:addons/crm/models/crm_lead.py:0
-#, python-format
-msgid ""
-"Use the top left <i>Create</i> button, or send an email to %s to test the "
-"email gateway."
 msgstr ""
 
 #. module: crm
@@ -3841,13 +3830,8 @@ msgstr ""
 msgid ""
 "Use the <i>New</i> button, or send an email to %s to test the email gateway."
 msgstr ""
-
-#. module: crm
-#: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
-msgid ""
-"Use the top left Create button, or configure an email alias to test the "
-"email gateway."
-msgstr ""
+"Koristite gumb <i>Novi</i>, ili pošaljite email na %s za kreiranje nove "
+"prilike."
 
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.crm_action_helper
@@ -4054,7 +4038,7 @@ msgstr "npr. https://www.odoo.com"
 #. module: crm
 #: model_terms:ir.ui.view,arch_db:crm.res_config_settings_view_form
 msgid "for the leads created as of the"
-msgstr ""
+msgstr "za prilike stvorene od"
 
 #. module: crm
 #: model_terms:digest.tip,tip_description:crm.digest_tip_crm_0

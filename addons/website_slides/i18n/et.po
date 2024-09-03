@@ -6,10 +6,10 @@
 # Helen Sulaoja <helen@avalah.ee>, 2022
 # Martin Talts <martin.t@avalah.ee>, 2022
 # Ants Peetsalu <ants@avalah.ee>, 2022
+# Andre Roomet <andreroomet@gmail.com>, 2022
 # Egon Raamat <egon@avalah.ee>, 2022
 # Marek Pontus, 2022
 # Rivo Zängov <eraser@eraser.ee>, 2022
-# Andre Roomet <andreroomet@gmail.com>, 2022
 # Arma Gedonsky <armagedonsky@hot.ee>, 2022
 # Triine Aavik <triine@avalah.ee>, 2022
 # Piia Paurson <piia@avalah.ee>, 2022
@@ -17,19 +17,21 @@
 # Algo Kärp <algokarp@gmail.com>, 2022
 # Martin Aavastik <martin@avalah.ee>, 2022
 # Wanradt Koell <wanradt@gmail.com>, 2022
-# Eneli Õigus <enelioigus@gmail.com>, 2022
 # Patrick-Jordan Kiudorv, 2022
 # Leaanika Randmets, 2023
 # JanaAvalah, 2023
-# Anna, 2023
+# Mihkel avalah, 2023
+# Eneli Õigus <enelioigus@gmail.com>, 2024
+# Anna, 2024
+# Stevin Lilla, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-23 08:22+0000\n"
+"POT-Creation-Date: 2024-02-06 13:31+0000\n"
 "PO-Revision-Date: 2022-09-22 05:57+0000\n"
-"Last-Translator: Anna, 2023\n"
+"Last-Translator: Stevin Lilla, 2024\n"
 "Language-Team: Estonian (https://app.transifex.com/odoo/teams/41243/et/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -716,7 +718,7 @@ msgstr "<span class=\"o_stat_text\">Kursused</span>"
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_slide_form
 msgid "<span class=\"o_stat_text\">Embed Views</span>"
-msgstr ""
+msgstr "<span class=\"o_stat_text\">Põimise vaated</span>"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.course_card_information_arrow
@@ -931,7 +933,7 @@ msgstr ""
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_slide_demo_1_4
 msgid "A little chat with Harry Potted"
-msgstr ""
+msgstr "Väike vestlus Harry Potteriga"
 
 #. module: website_slides
 #: model_terms:slide.channel,description:website_slides.slide_channel_demo_2_gard2
@@ -1020,7 +1022,7 @@ msgstr "API võti"
 #: code:addons/website_slides/models/slide_channel.py:0
 #, python-format
 msgid "Access Granted"
-msgstr ""
+msgstr "Juurdepääs lubatud"
 
 #. module: website_slides
 #: model:ir.model,name:website_slides.model_res_groups
@@ -1032,7 +1034,7 @@ msgstr "Ligipääsu gruppid"
 #: code:addons/website_slides/models/slide_channel.py:0
 #, python-format
 msgid "Access Refused"
-msgstr ""
+msgstr "Juurdepääs keelatud"
 
 #. module: website_slides
 #: model:mail.activity.type,name:website_slides.mail_activity_data_access_request
@@ -1052,7 +1054,7 @@ msgstr "Ligipääsuõigused"
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.slide_slide_partner_view_tree
 msgid "Accessed on"
-msgstr ""
+msgstr "Juurdepääs antud"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.snippet_options
@@ -1079,7 +1081,7 @@ msgstr "Tegevused"
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel__activity_exception_decoration
 msgid "Activity Exception Decoration"
-msgstr "Tegevuse erandlik kohendus"
+msgstr "Tegevuse erandi tüüp"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel__activity_state
@@ -1232,7 +1234,7 @@ msgstr "Luba osalejatel tagasisidet ja hinnangut anda kursuse kohta"
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide__slide_resource_downloadable
 msgid "Allow Download"
-msgstr ""
+msgstr "Luba allalaadimine"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide__is_preview
@@ -1442,6 +1444,11 @@ msgid "Average Review"
 msgstr ""
 
 #. module: website_slides
+#: model_terms:ir.ui.view,arch_db:website_slides.slide_content_detailed
+msgid "BUILDING BLOCKS DROPPED HERE WILL BE SHOWN ACROSS ALL LESSONS"
+msgstr ""
+
+#. module: website_slides
 #. odoo-javascript
 #: code:addons/website_slides/static/src/js/slides_category_add.js:0
 #: code:addons/website_slides/static/src/js/slides_course_tag_add.js:0
@@ -1632,7 +1639,7 @@ msgstr "Kanali jagamise mall"
 #. module: website_slides
 #: model:mail.template,name:website_slides.mail_template_channel_shared
 msgid "Channel Shared"
-msgstr ""
+msgstr "Kanal jagatud"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide__channel_type
@@ -2652,12 +2659,12 @@ msgstr "Põimise kood"
 #: model:ir.actions.act_window,name:website_slides.slide_embed_action
 #: model_terms:ir.ui.view,arch_db:website_slides.slide_embed_view_tree
 msgid "Embed Views"
-msgstr ""
+msgstr "Manustatud vaated"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.slide_social_embed
 msgid "Embed in another Website"
-msgstr ""
+msgstr "Lisa teise veebilehe külge"
 
 #. module: website_slides
 #: model:ir.model,name:website_slides.model_slide_embed
@@ -2773,8 +2780,8 @@ msgid "File Name"
 msgstr "Faili nimi"
 
 #. module: website_slides
-#. odoo-python
 #. odoo-javascript
+#. odoo-python
 #: code:addons/website_slides/controllers/main.py:0
 #: code:addons/website_slides/static/src/js/slides_upload.js:0
 #, python-format
@@ -2906,7 +2913,7 @@ msgstr ""
 #. module: website_slides
 #: model:slide.channel.tag,name:website_slides.slide_channel_tag_role_furniture
 msgid "Furniture Designer"
-msgstr ""
+msgstr "Mööbli disainer"
 
 #. module: website_slides
 #: model:slide.channel,name:website_slides.slide_channel_demo_4_furn1
@@ -2957,7 +2964,7 @@ msgstr "Andke oma kursusele vajalik <b>Kirjeldus</b>."
 #: code:addons/website_slides/static/src/js/tours/slides_tour.js:0
 #, python-format
 msgid "Give your course an engaging <b>Title</b>."
-msgstr ""
+msgstr "Anna oma kursusele <b>Pealkiri</b>."
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_res_config_settings__website_slide_google_app_key
@@ -3022,7 +3029,7 @@ msgstr ""
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel_tag__group_sequence
 msgid "Group sequence"
-msgstr ""
+msgstr "Grupi järjestus"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide__html_content
@@ -3059,7 +3066,7 @@ msgstr "Kodu"
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_slide_demo_0_1
 msgid "Home Gardening"
-msgstr ""
+msgstr "Kodu aiandus"
 
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_slide_demo_5_2
@@ -3072,7 +3079,7 @@ msgstr ""
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid "How do I add new content?"
-msgstr ""
+msgstr "Kuidas ma lisan uut sisu?"
 
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_slide_demo_0_3
@@ -3661,7 +3668,7 @@ msgstr "Õppetunnid"
 #: code:addons/website_slides/static/src/js/slides_course_quiz_finish.js:0
 #, python-format
 msgid "Level up!"
-msgstr ""
+msgstr "Järgmine tase!"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.lesson_card
@@ -3761,7 +3768,7 @@ msgstr "Märgi lõpetatuks"
 #: model_terms:ir.ui.view,arch_db:website_slides.slide_sidebar_done_button
 #, python-format
 msgid "Mark as not done"
-msgstr ""
+msgstr "Märgi mitte tehtuks"
 
 #. module: website_slides
 #. odoo-javascript
@@ -3828,7 +3835,7 @@ msgstr "Meetodid"
 #. module: website_slides
 #: model:slide.slide,name:website_slides.slide_slide_demo_0_2
 msgid "Mighty Carrots"
-msgstr ""
+msgstr "Võimsad porgandid"
 
 #. module: website_slides
 #: model_terms:slide.slide,description:website_slides.slide_slide_demo_2_1
@@ -4025,12 +4032,12 @@ msgstr ""
 #: model_terms:ir.ui.view,arch_db:website_slides.courses_all
 #: model_terms:ir.ui.view,arch_db:website_slides.courses_home
 msgid "No Course created yet."
-msgstr ""
+msgstr "Kursust pole veel loodud."
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_channel_form
 msgid "No Notification"
-msgstr ""
+msgstr "Ilma teavituseta"
 
 #. module: website_slides
 #: model_terms:ir.actions.act_window,help:website_slides.slide_question_action_report
@@ -4170,7 +4177,7 @@ msgstr "Vigade arv"
 #: model:ir.model.fields,help:website_slides.field_slide_channel__message_needaction_counter
 #: model:ir.model.fields,help:website_slides.field_slide_slide__message_needaction_counter
 msgid "Number of messages requiring action"
-msgstr ""
+msgstr "Tegevust nõudvate sõnumite arv"
 
 #. module: website_slides
 #: model:ir.model.fields,help:website_slides.field_slide_channel__message_has_error_counter
@@ -4237,6 +4244,12 @@ msgstr ""
 #: model:ir.model.fields.selection,name:website_slides.selection__slide_channel__visibility__public
 msgid "Open To All"
 msgstr "Ava kõigile"
+
+#. module: website_slides
+#: code:addons/website_slides/controllers/mail.py:0
+#, python-format
+msgid "Only a single review can be posted per course."
+msgstr ""
 
 #. module: website_slides
 #: model:ir.model.fields,help:website_slides.field_slide_channel_invite__lang
@@ -4377,7 +4390,7 @@ msgstr ""
 #: code:addons/website_slides/wizard/slide_channel_invite.py:0
 #, python-format
 msgid "Please select at least one recipient."
-msgstr ""
+msgstr "Palun vali vähemalt üks saaja."
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_slide_form
@@ -4405,21 +4418,13 @@ msgstr "Esitlus"
 #: model:mail.message.subtype,description:website_slides.mt_channel_slide_published
 #: model:mail.message.subtype,name:website_slides.mt_channel_slide_published
 msgid "Presentation Published"
-msgstr ""
+msgstr "Estilus avaldatud"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.lesson_card
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_channel_form
 msgid "Preview"
 msgstr "Eelvaade"
-
-#. module: website_slides
-#. odoo-javascript
-#: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
-#: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
-#, python-format
-msgid "Private"
-msgstr "Privaatne"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.course_join
@@ -4434,7 +4439,7 @@ msgstr "Progress"
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_channel__promoted_slide_id
 msgid "Promoted Slide"
-msgstr ""
+msgstr "Esiletõstetud slaid"
 
 #. module: website_slides
 #: model:ir.model.fields.selection,name:website_slides.selection__slide_channel__enroll__public
@@ -4467,7 +4472,7 @@ msgstr "Avaldatud"
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_channel_form
 msgid "Published Contents"
-msgstr ""
+msgstr "Avaldatud sisu"
 
 #. module: website_slides
 #: model_terms:ir.ui.view,arch_db:website_slides.view_slide_slide_form
@@ -4746,7 +4751,7 @@ msgstr "Avaldage ainult see veebileht"
 #: model:ir.model.fields.selection,name:website_slides.selection__slide_slide__source_type__external
 #, python-format
 msgid "Retrieve from Google Drive"
-msgstr ""
+msgstr "Tõmba Google Drive'ist"
 
 #. module: website_slides
 #. odoo-javascript
@@ -5332,7 +5337,7 @@ msgstr ""
 #: code:addons/website_slides/static/src/xml/slide_quiz.xml:0
 #, python-format
 msgid "Succeed and gain karma"
-msgstr ""
+msgstr "Saavuta edu ja kogu karmat"
 
 #. module: website_slides
 #. odoo-javascript
@@ -5532,8 +5537,8 @@ msgstr ""
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid ""
-"The video link to input here can be obtained by using the 'share' button in "
-"the Vimeo interface."
+"The video link to input here can be obtained by using the 'Share link' "
+"button in the Vimeo interface."
 msgstr ""
 
 #. module: website_slides
@@ -5543,15 +5548,6 @@ msgstr "Hääletada võib kas a.) 1, b.) 0 või c.) -1."
 
 #. module: website_slides
 #. odoo-javascript
-#: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
-#, python-format
-msgid ""
-"The video link to input here can be obtained by using the 'Share link' "
-"button in the Vimeo interface."
-msgstr ""
-
-#. module: website_slides
-#. openerp-web
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid "Then, go into the file permissions and set it as \"Anyone with the link\"."
@@ -5807,14 +5803,14 @@ msgid "Unknown error, try again."
 msgstr "Tundmatu viga, proovi uuesti."
 
 #. module: website_slides
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid "Unlisted"
 msgstr "Registreerimata"
 
 #. module: website_slides
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid "Unlisted (paid account)"
@@ -5857,19 +5853,19 @@ msgstr "Grupid, kes võivad sisu ülesse laadida"
 #: model:ir.model.fields.selection,name:website_slides.selection__slide_slide__source_type__local_file
 #, python-format
 msgid "Upload from Device"
-msgstr ""
+msgstr "Seadmest üleslaetud"
 
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide__user_id
 msgid "Uploaded by"
-msgstr ""
+msgstr "Üleslaetud"
 
 #. module: website_slides
 #. odoo-javascript
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid "Uploading document ..."
-msgstr ""
+msgstr "Dokumendi üleslaadimine ..."
 
 #. module: website_slides
 #: model_terms:ir.actions.act_window,help:website_slides.action_slide_tag
@@ -5899,7 +5895,7 @@ msgstr "Kasutaja"
 #. module: website_slides
 #: model:ir.model.fields,field_description:website_slides.field_slide_slide__user_vote
 msgid "User vote"
-msgstr ""
+msgstr "Kasutaja hääl"
 
 #. module: website_slides
 #. odoo-javascript
@@ -6109,7 +6105,7 @@ msgstr ""
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid "What does"
-msgstr ""
+msgstr "Mida teeb"
 
 #. module: website_slides
 #: model:slide.question,question:website_slides.slide_slide_demo_0_4_question_0
@@ -6232,6 +6228,8 @@ msgid ""
 "You are not allowed to add members to this course. Please contact the course"
 " responsible or an administrator."
 msgstr ""
+"Sul ei ole lubatud lisada sellele kursusele uusi liikmeid. Palun võta "
+"ühendust kursuse eest vastutava isiku või administraatoriga."
 
 #. module: website_slides
 #. odoo-javascript
@@ -6610,7 +6608,7 @@ msgstr "\"Privaatsete\" videote ja sarnaste videote jaoks"
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid "for public ones."
-msgstr ""
+msgstr "avalike jaoks."
 
 #. module: website_slides
 #. odoo-javascript
@@ -6655,21 +6653,12 @@ msgstr "sisselogimine"
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid ""
-"mean? The Vimeo \"Private\" privacy setting means it is a video which can be viewed only by the users with the link to it.\n"
-"                                    Your video will never come up in the search results nor on your channel."
-msgstr ""
-
-#. module: website_slides
-#. odoo-javascript
-#: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
-#, python-format
-msgid ""
 "mean? The Vimeo \"Unlisted\" privacy setting means it is a video which can be viewed only by the users with the link to it.\n"
 "                                    Your video will never come up in the search results nor on your channel."
 msgstr ""
 
 #. module: website_slides
-#. openerp-web
+#. odoo-javascript
 #: code:addons/website_slides/static/src/xml/website_slides_upload.xml:0
 #, python-format
 msgid ""

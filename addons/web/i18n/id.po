@@ -9,15 +9,16 @@
 # Aldo Bagaskara, 2023
 # Martin Trigaux, 2023
 # arfa simoncelli, 2023
-# Abe Manyo, 2023
+# Wil Odoo, 2024
+# Abe Manyo, 2024
 # 
 msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 10:35+0000\n"
+"POT-Creation-Date: 2024-01-25 10:43+0000\n"
 "PO-Revision-Date: 2022-09-22 05:55+0000\n"
-"Last-Translator: Abe Manyo, 2023\n"
+"Last-Translator: Abe Manyo, 2024\n"
 "Language-Team: Indonesian (https://app.transifex.com/odoo/teams/41243/id/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -321,13 +322,15 @@ msgstr "<span class=\"text-nowrap\">Pajak 15%</span>"
 #: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
 msgid ""
 "<span class=\"w-100 o_force_ltr\" itemprop=\"streetAddress\">77 Santa Barbara\n"
-"                                               Rd<br/>Pleasant Hill CA 94523<br/>United States</span>"
+"                                       Rd<br/>Pleasant Hill CA 94523<br/>United States</span>"
 msgstr ""
+"<span class=\"w-100 o_force_ltr\" itemprop=\"streetAddress\">77 Santa Barbara\n"
+"                                       Rd<br/>Pleasant Hill CA 94523<br/>United States</span>"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
 msgid "<span id=\"line_tax_ids\">Tax 15%</span>"
-msgstr ""
+msgstr "<span id=\"line_tax_ids\">Pajak 15%</span>"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
@@ -360,6 +363,8 @@ msgid ""
 "<span>Invoice</span>\n"
 "                           <span>INV/2023/00003</span>"
 msgstr ""
+"<span>Faktur</span>\n"
+"                           <span>INV/2023/00003</span>"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
@@ -417,7 +422,7 @@ msgstr "<strong>Total</strong>"
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.report_invoice_wizard_preview
 msgid "<strong>Untaxed Amount</strong>"
-msgstr ""
+msgstr "<strong>Jumlah Sebelum Pajak</strong>"
 
 #. module: web
 #. odoo-javascript
@@ -1650,7 +1655,7 @@ msgstr "Buat %s"
 #: code:addons/web/static/src/views/fields/many2one/many2one_field.js:0
 #, python-format
 msgid "Create <strong>%s</strong> as a new %s?"
-msgstr ""
+msgstr "Buat <strong>%s</strong> sebagai %s baru?"
 
 #. module: web
 #. odoo-javascript
@@ -1813,7 +1818,7 @@ msgstr "Desimal"
 #: code:addons/web/static/src/core/debug/profiling/profiling_item.xml:0
 #, python-format
 msgid "Default"
-msgstr "Baku"
+msgstr "Default"
 
 #. module: web
 #. odoo-javascript
@@ -1941,7 +1946,7 @@ msgstr "Alat pengembang"
 #: code:addons/web/static/src/views/list/list_renderer.js:0
 #, python-format
 msgid "Different currencies cannot be aggregated"
-msgstr ""
+msgstr "Mata uang yang berbeda tidak dapat diagregat"
 
 #. module: web
 #. odoo-javascript
@@ -2234,6 +2239,7 @@ msgstr "Enterprise"
 #. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/core/file_upload/file_upload_service.js:0
+#: code:addons/web/static/src/views/relational_model.js:0
 #, python-format
 msgid "Error"
 msgstr "Eror!"
@@ -2402,7 +2408,6 @@ msgstr "File"
 #. module: web
 #. odoo-javascript
 #: code:addons/web/static/src/legacy/js/fields/basic_fields.js:0
-#: code:addons/web/static/src/views/fields/file_handler.js:0
 #, python-format
 msgid "File upload"
 msgstr "Unggah File"
@@ -2614,6 +2619,19 @@ msgstr "Teks header ditampilkan pada bagian atas semua laporan."
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/views/basic_relational_model.js:0
+#, python-format
+msgid ""
+"Heads up! Your recent changes are too large to save automatically. Please "
+"click the <i class=\"fa fa-cloud-upload fa-fw\"></i> button now to ensure "
+"your work is saved before you exit this tab."
+msgstr ""
+"Perhatian! Perubahan terkini terlalu besar untuk disimpan secara otomatis. "
+"Mohon klik tombol <i class=\"fa fa-cloud-upload fa-fw\"></i> sekarang untuk "
+"memastikan pekerjaan Anda disimpan sebelum Anda keluar dari tab ini."
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/legacy/xml/base.xml:0
 #, python-format
 msgid "Hide in Kanban"
@@ -2821,7 +2839,7 @@ msgstr "Kolom-kolom invalid:"
 #: code:addons/web/controllers/domain.py:0
 #, python-format
 msgid "Invalid model: %s"
-msgstr ""
+msgstr "Model tidak valid: %s"
 
 #. module: web
 #. odoo-javascript
@@ -3801,6 +3819,13 @@ msgstr "Buka Tampilan"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/debug/debug_menu.xml:0
+#, python-format
+msgid "Open developer tools"
+msgstr "Buka developer tool"
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/views/fields/relational_utils.js:0
 #, python-format
 msgid "Open:"
@@ -4089,6 +4114,8 @@ msgid ""
 "Please use the following communication for your payment : <b><span>\n"
 "                           INV/2023/00003</span></b>"
 msgstr ""
+"Mohon gunakan referensi berikut untuk pembayaran Anda : <b><span>\n"
+"                           INV/2023/00003</span></b>"
 
 #. module: web
 #. odoo-javascript
@@ -4439,7 +4466,7 @@ msgstr "Hubungan:"
 #: code:addons/web/static/src/views/fields/x2many/x2many_field.js:0
 #, python-format
 msgid "Relational table"
-msgstr ""
+msgstr "Tabel relasional"
 
 #. module: web
 #. odoo-javascript
@@ -4541,6 +4568,13 @@ msgstr "Laporkan Pratinjau Layout"
 #, python-format
 msgid "Request timeout"
 msgstr "Waktu Request Habis"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/domain_selector/domain_selector.xml:0
+#, python-format
+msgid "Reset domain"
+msgstr "Reset domain"
 
 #. module: web
 #: model_terms:ir.ui.view,arch_db:web.view_base_document_layout
@@ -5151,6 +5185,7 @@ msgstr "Eror Syntax"
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/commands/command_items.xml:0
 #: code:addons/web/static/src/webclient/user_menu/user_menu_items.xml:0
 #, python-format
 msgid "TIP"
@@ -5245,8 +5280,14 @@ msgstr ""
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/utils/files.js:0
+#, python-format
+msgid "The selected file (%sB) is over the maximum allowed file size (%sB)."
+msgstr "File yang dipilih (%sB) melebihi ukuran file maksimum (%sB)."
+
+#. module: web
+#. odoo-javascript
 #: code:addons/web/static/src/legacy/js/fields/basic_fields.js:0
-#: code:addons/web/static/src/views/fields/file_handler.js:0
 #, python-format
 msgid "The selected file exceed the maximum file size of %s."
 msgstr "File yang dipilih melebihi ukuran maksimum, yaitu %s."
@@ -5879,6 +5920,7 @@ msgstr "Lihat pengalih"
 #: code:addons/web/static/src/legacy/js/views/list/list_controller.js:0
 #: code:addons/web/static/src/legacy/xml/base.xml:0
 #: code:addons/web/static/src/legacy/xml/base.xml:0
+#: code:addons/web/static/src/legacy/xml/control_panel.xml:0
 #: code:addons/web/static/src/search/favorite_menu/favorite_menu.js:0
 #: code:addons/web/static/src/views/fields/domain/domain_field.xml:0
 #: code:addons/web/static/src/views/fields/domain/domain_field.xml:0
@@ -6059,6 +6101,8 @@ msgstr "Anda mungkin tidak percaya, <br /> tetapi aplikasi masih memuat..."
 #, python-format
 msgid "You need to be able to edit parent first to add property tags"
 msgstr ""
+"Anda harus bisa mengedit induk terlebih dahulu untuk menambahkan tag "
+"properti"
 
 #. module: web
 #. odoo-javascript
@@ -6067,6 +6111,8 @@ msgstr ""
 #, python-format
 msgid "You need to be able to edit parent first to configure property fields"
 msgstr ""
+"Anda harus bisa mengedit induk terlebih dahulu untuk mengonfigurasi field "
+"properti"
 
 #. module: web
 #. odoo-javascript
@@ -6184,6 +6230,13 @@ msgstr "seperti bukan orang"
 #, python-format
 msgid "all records"
 msgstr "semua dokumen"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/commands/command_items.xml:0
+#, python-format
+msgid "and"
+msgstr "dan"
 
 #. module: web
 #. odoo-javascript
@@ -6517,8 +6570,8 @@ msgstr "masih loading..."
 
 #. module: web
 #. odoo-javascript
+#: code:addons/web/static/src/core/utils/numbers.js:0
 #: code:addons/web/static/src/legacy/js/core/utils.js:0
-#: code:addons/web/static/src/views/fields/formatters.js:0
 #, python-format
 msgid "kMGTPE"
 msgstr "kMGTPE"
@@ -6597,7 +6650,7 @@ msgstr "ms"
 #: code:addons/web/static/src/core/commands/command_palette.xml:0
 #, python-format
 msgid "new tab"
-msgstr ""
+msgstr "tab baru"
 
 #. module: web
 #. odoo-javascript
@@ -6784,3 +6837,10 @@ msgstr "ketik teks default lalu pencet ENTER"
 #, python-format
 msgid "— press"
 msgstr "— pencet"
+
+#. module: web
+#. odoo-javascript
+#: code:addons/web/static/src/core/commands/command_items.xml:0
+#, python-format
+msgid "— search for"
+msgstr "— cari"

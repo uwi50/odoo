@@ -13,7 +13,7 @@ from odoo.tests.common import BaseCase, TransactionCase
 from odoo.tests import tagged
 from odoo.tools import (
     is_html_empty, html_to_inner_content, html_sanitize, append_content_to_html, plaintext2html,
-    email_domain_normalize, email_normalize, email_split, email_split_and_format,
+    email_domain_normalize, email_normalize, email_split, email_split_and_format, html2plaintext,
     misc, formataddr,
     prepend_html_content,
     config,
@@ -64,7 +64,7 @@ class TestSanitizer(BaseCase):
             ("<DIV STYLE=\"background-image: url(&#1;javascript:alert('XSS'))\">"),  # div background + extra characters
             ("<IMG SRC='vbscript:msgbox(\"XSS\")'>"),  # VBscrip in an image
             ("<BODY ONLOAD=alert('XSS')>"),  # event handler
-            ("<BR SIZE=\"&{alert('XSS')}\>"),  # & javascript includes
+            ("<BR SIZE=\"&{alert('XSS')}\\>"),  # & javascript includes
             ("<LINK REL=\"stylesheet\" HREF=\"javascript:alert('XSS');\">"),  # style sheet
             ("<LINK REL=\"stylesheet\" HREF=\"http://ha.ckers.org/xss.css\">"),  # remote style sheet
             ("<STYLE>@import'http://ha.ckers.org/xss.css';</STYLE>"),  # remote style sheet 2
@@ -86,6 +86,46 @@ class TestSanitizer(BaseCase):
             self.assertIn(tag, sanitized_html, 'html_sanitize stripped too much of original html')
         for attr in ['javascript']:
             self.assertNotIn(attr, sanitized_html, 'html_sanitize did not remove enough unwanted attributes')
+
+    def test_outlook_mail_sanitize(self):
+        case = """<div class="WordSection1">
+<p class="MsoNormal">Here is a test mail<o:p></o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class="MsoNormal">With a break line<o:p></o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<p class="MsoNormal">Then two<o:p></o:p></p>
+<p class="MsoNormal"><o:p>&nbsp;</o:p></p>
+<div>
+<div style="border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0in 0in 0in">
+<p class="MsoNormal"><b>From:</b> Mitchell Admin &lt;dummy@example.com&gt;
+<br>
+<b>Sent:</b> Monday, November 20, 2023 8:34 AM<br>
+<b>To:</b> test user &lt;dummy@example.com&gt;<br>
+<b>Subject:</b> test (#23)<o:p></o:p></p>
+</div>
+</div>"""
+
+        expected = """<div class="WordSection1">
+<p class="MsoNormal">Here is a test mail</p>
+<p class="MsoNormal">&nbsp;</p>
+<p class="MsoNormal">With a break line</p>
+<p class="MsoNormal">&nbsp;</p>
+<p class="MsoNormal">&nbsp;</p>
+<p class="MsoNormal">Then two</p>
+<p class="MsoNormal">&nbsp;</p>
+<div>
+<div style="border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0in 0in 0in">
+<p class="MsoNormal"><b>From:</b> Mitchell Admin &lt;dummy@example.com&gt;
+<br>
+<b>Sent:</b> Monday, November 20, 2023 8:34 AM<br>
+<b>To:</b> test user &lt;dummy@example.com&gt;<br>
+<b>Subject:</b> test (#23)</p>
+</div>
+</div></div>"""
+
+        result = html_sanitize(case)
+        self.assertEqual(result, expected)
 
     def test_sanitize_unescape_emails(self):
         not_emails = [
@@ -313,7 +353,7 @@ class TestHtmlTools(BaseCase):
             ('<div><p>First <br/>Second <br/>Third Paragraph</p><p>--<br/>Signature paragraph with a <a href="./link">link</a></p></div>',
              'First Second Third Paragraph -- Signature paragraph with a link'),
             ('<p>Now =&gt; processing&nbsp;entities&#8203;and extra whitespace too.  </p>',
-             'Now =&gt; processing&nbsp;entities\u200band extra whitespace too.'),
+             'Now => processing\xa0entities\u200band extra whitespace too.'),
             ('<div>Look what happens with <p>unmatched tags</div>', 'Look what happens with unmatched tags'),
             ('<div>Look what happens with <p unclosed tags</div> Are we good?', 'Look what happens with Are we good?')
         ]
@@ -341,6 +381,7 @@ class TestHtmlTools(BaseCase):
             self.assertTrue(is_html_empty(content))
 
         void_html_samples = [
+            '<section><br /> <b><i/></b></section>',
             '<p><br></p>', '<p><br> </p>', '<p><br /></p >',
             '<p style="margin: 4px"></p>',
             '<div style="margin: 4px"></div>',
@@ -414,6 +455,15 @@ class TestHtmlTools(BaseCase):
 class TestEmailTools(BaseCase):
     """ Test some of our generic utility functions for emails """
 
+    def test_email_domain_normalize(self):
+        cases = [
+            ("Test.Com", "test.com", "Should have normalized domain"),
+            ("email@test.com", False, "Domain is not valid, should return False"),
+            (False, False, "Domain is not valid, should retunr False"),
+        ]
+        for source, expected, msg in cases:
+            self.assertEqual(email_domain_normalize(source), expected, msg)
+
     def test_email_normalize(self):
         """ Test 'email_normalize'. Note that it is built on 'email_split' so
         some use cases are already managed in 'test_email_split(_and_format)'
@@ -435,7 +485,7 @@ class TestEmailTools(BaseCase):
             'deboulonneur@example.com',
             'deboulonneur@example.comdéboulonneur',
             False,
-            '@example.com',  # funny
+            False,  # need fix over 'getadresses'
             'deboulonneur.😊@example.com',
             'déboulonneur@examplé.com',
             'DéBoulonneur@examplé.com',
@@ -445,7 +495,7 @@ class TestEmailTools(BaseCase):
             f'"{format_name}" <deboulonneur@example.com>',
             f'"{format_name}" <deboulonneur@example.comdéboulonneur>',
             f'"{format_name}" <@>',
-            f'"{format_name}" <@example.com>',
+            f'"{format_name}" <@>',
             f'"{format_name}" <deboulonneur.😊@example.com>',
             f'"{format_name}" <déboulonneur@examplé.com>',
             f'"{format_name}" <DéBoulonneur@examplé.com>',
@@ -455,7 +505,7 @@ class TestEmailTools(BaseCase):
             f'{format_name_ascii} <deboulonneur@example.com>',
             f'{format_name_ascii} <deboulonneur@example.xn--comdboulonneur-ekb>',
             f'{format_name_ascii} <@>',
-            f'{format_name_ascii} <@example.com>',
+            f'{format_name_ascii} <@>',
             f'{format_name_ascii} <deboulonneur.😊@example.com>',
             f'{format_name_ascii} <déboulonneur@xn--exampl-gva.com>',
             f'{format_name_ascii} <DéBoulonneur@xn--exampl-gva.com>',
@@ -477,9 +527,57 @@ class TestEmailTools(BaseCase):
             ("'(ss)' <123@gmail.com>, 'foo' <foo@bar>", ['123@gmail.com', 'foo@bar']),  # comma + single-quoting
             ('"john@gmail.com"<johnny@gmail.com>', ['johnny@gmail.com']),  # double-quoting
             ('"<jg>" <johnny@gmail.com>', ['johnny@gmail.com']),  # double-quoting with brackets
+            ('@gmail.com', ['@gmail.com']),  # no left-part
+            # '@domain' corner cases -- all those return a '@gmail.com' (or equivalent)
+            # email address when going through 'getaddresses'
+            # - multi @
+            ('fr@ncois.th@notgmail.com', ['fr@ncois.th']),
+            ('f@r@nc.gz,ois@notgmail.com', ['r@nc.gz', 'ois@notgmail.com']),  # still failing, but differently from 'getaddresses' alone
+            ('@notgmail.com esteban_gnole@coldmail.com@notgmail.com', ['esteban_gnole@coldmail.com']),
+            # - multi emails (with invalid)
+            (
+                'Ivan@dezotos.com Cc iv.an@notgmail.com',
+                ['Ivan@dezotos.com', 'iv.an@notgmail.com']
+            ),
+            (
+                'ivan-dredi@coldmail.com ivan.dredi@notgmail.com',
+                ['ivan-dredi@coldmail.com', 'ivan.dredi@notgmail.com']
+            ),
+            (
+                '@notgmail.com ivan@coincoin.com.ar jeanine@coincoin.com.ar',
+                ['ivan@coincoin.com.ar', 'jeanine@coincoin.com.ar']
+            ),
+            (
+                '@notgmail.com whoareyou@youhou.com.   ivan.dezotos@notgmail.com',
+                ['whoareyou@youhou.com', 'ivan.dezotos@notgmail.com']
+            ),
+            (
+                'francois@nc.gz CC: ois@notgmail.com ivan@dezotos.com',
+                ['francois@nc.gz', 'ois@notgmail.com', 'ivan@dezotos.com']
+            ),
+            (
+                'francois@nc.gz CC: ois@notgmail.com,ivan@dezotos.com',
+                ['francois@nc.gzCC', 'ois@notgmail.com', 'ivan@dezotos.com']
+            ),
+            # - separated with '/''
+            (
+                'ivan.plein@dezotos.com / ivan.plu@notgmail.com',
+                ['ivan.plein@dezotos.com', 'ivan.plu@notgmail.com']
+            ),
+            (
+                '@notgmail.com ivan.parfois@notgmail.com/ ivan.souvent@notgmail.com',
+                ['ivan.parfois@notgmail.com', 'ivan.souvent@notgmail.com']
+            ),
+            # - separated with '-''
+            ('ivan@dezotos.com - ivan.dezotos@notgmail.com', ['ivan@dezotos.com', 'ivan.dezotos@notgmail.com']),
+            (
+                'car.pool@notgmail.com - co (TAMBO) Registration car.warsh@notgmail.com',
+                ['car.pool@notgmail.com', 'car.warsh@notgmail.com']
+            ),
         ]
-        for text, expected in cases:
-            self.assertEqual(email_split(text), expected, 'email_split is broken')
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(email_split(source), expected)
 
     def test_email_split_and_format(self):
         """ Test 'email_split_and_format', notably in case of multi encapsulation
@@ -513,7 +611,7 @@ class TestEmailTools(BaseCase):
             # multi
             ['deboulonneur@example.com'],
             ['deboulonneur@example.com', 'deboulonneur2@example.com'],
-            ['@example.com'],  # funny one
+            ['deboulonneur@example.com', 'deboulonneur2@example.com'],  # need fix over 'getadresses'
             # format / misc
             ['deboulonneur@example.com'],
             ['"Super Déboulonneur" <deboulonneur@example.com>', '"Super Déboulonneur 2" <deboulonneur2@example.com>'],
@@ -527,16 +625,16 @@ class TestEmailTools(BaseCase):
                 self.assertEqual(email_split_and_format(source), expected)
 
     def test_email_formataddr(self):
-        email = 'joe@example.com'
+        email_base = 'joe@example.com'
         email_idna = 'joe@examplé.com'
         cases = [
             # (name, address),          charsets            expected
-            (('', email),               ['ascii', 'utf-8'], 'joe@example.com'),
-            (('joe', email),            ['ascii', 'utf-8'], '"joe" <joe@example.com>'),
-            (('joe doe', email),        ['ascii', 'utf-8'], '"joe doe" <joe@example.com>'),
-            (('joe"doe', email),        ['ascii', 'utf-8'], '"joe\\"doe" <joe@example.com>'),
-            (('joé', email),            ['ascii'],          '=?utf-8?b?am/DqQ==?= <joe@example.com>'),
-            (('joé', email),            ['utf-8'],          '"joé" <joe@example.com>'),
+            (('', email_base),          ['ascii', 'utf-8'], 'joe@example.com'),
+            (('joe', email_base),       ['ascii', 'utf-8'], '"joe" <joe@example.com>'),
+            (('joe doe', email_base),   ['ascii', 'utf-8'], '"joe doe" <joe@example.com>'),
+            (('joe"doe', email_base),   ['ascii', 'utf-8'], '"joe\\"doe" <joe@example.com>'),
+            (('joé', email_base),       ['ascii'],          '=?utf-8?b?am/DqQ==?= <joe@example.com>'),
+            (('joé', email_base),       ['utf-8'],          '"joé" <joe@example.com>'),
             (('', email_idna),          ['ascii'],          'joe@xn--exampl-gva.com'),
             (('', email_idna),          ['utf-8'],          'joe@examplé.com'),
             (('joé', email_idna),       ['ascii'],          '=?utf-8?b?am/DqQ==?= <joe@xn--exampl-gva.com>'),
@@ -550,22 +648,23 @@ class TestEmailTools(BaseCase):
                     self.assertEqual(formataddr(pair, charset), expected)
 
     def test_extract_rfc2822_addresses(self):
-        tests = [
+        cases = [
             ('"Admin" <admin@example.com>', ['admin@example.com']),
             ('"Admin" <admin@example.com>, Demo <demo@test.com>', ['admin@example.com', 'demo@test.com']),
             ('admin@example.com', ['admin@example.com']),
             ('"Admin" <admin@example.com>, Demo <malformed email>', ['admin@example.com']),
             ('admin@éxample.com', ['admin@xn--xample-9ua.com']),
-            ('"admin@éxample.com" <admin@éxample.com>', ['admin@xn--xample-9ua.com']),
+            # formatted input containing email
+            ('"admin@éxample.com" <admin@éxample.com>', ['admin@xn--xample-9ua.com', 'admin@xn--xample-9ua.com']),
+            ('"Robert Le Grand" <robert@notgmail.com>', ['robert@notgmail.com']),
+            ('"robert@notgmail.com" <robert@notgmail.com>', ['robert@notgmail.com', 'robert@notgmail.com']),
+            # accents
+            ('DéBoulonneur@examplé.com', ['DéBoulonneur@xn--exampl-gva.com']),
         ]
 
-        for (rfc2822_email, expected) in tests:
-            self.assertEqual(extract_rfc2822_addresses(rfc2822_email), expected)
-
-    def test_email_domain_normalize(self):
-        self.assertEqual(email_domain_normalize("Test.Com"), "test.com", "Should have normalized the domain")
-        self.assertEqual(email_domain_normalize("email@test.com"), False, "The domain is not valid, should return False")
-        self.assertEqual(email_domain_normalize(False), False, "The domain is not valid, should return False")
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(extract_rfc2822_addresses(source), expected)
 
 
 class EmailConfigCase(TransactionCase):
@@ -696,3 +795,35 @@ class TestEmailMessage(TransactionCase):
         payload = """<!---!> <script> alert(1) </script> -->"""
         html_result = html_sanitize(payload)
         self.assertNotIn('alert(1)', html_result)
+
+
+class TestMailTools(BaseCase):
+    """ Test mail utility methods. """
+
+    def test_html2plaintext(self):
+        self.assertEqual(html2plaintext(False), 'False')
+        self.assertEqual(html2plaintext('\t'), '')
+        self.assertEqual(html2plaintext('  '), '')
+        self.assertEqual(html2plaintext("""<h1>Title</h1>
+<h2>Sub title</h2>
+<br/>
+<h3>Sub sub title</h3>
+<h4>Sub sub sub title</h4>
+<p>Paragraph <em>with</em> <b>bold</b></p>
+<table><tr><td>table element 1</td></tr><tr><td>table element 2</td></tr></table>
+<p><special-chars>0 &lt; 10 &amp;  &nbsp; 10 &gt; 0</special-chars></p>"""),
+                         """**Title**
+**Sub title**
+
+*Sub sub title*
+Sub sub sub title
+Paragraph /with/ *bold*
+
+table element 1
+table element 2
+0 < 10 & \N{NO-BREAK SPACE} 10 > 0""")
+        self.assertEqual(html2plaintext('<p><img src="/web/image/428-c064ab1b/test-image.jpg?access_token=f72b5ec5-a363-45fb-b9ad-81fc794d6d7b" class="img img-fluid o_we_custom_image"><br></p>'),
+                         """test-image [1]
+
+
+[1] /web/image/428-c064ab1b/test-image.jpg?access_token=f72b5ec5-a363-45fb-b9ad-81fc794d6d7b""")
